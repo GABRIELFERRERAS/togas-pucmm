@@ -1291,10 +1291,17 @@ async function finalizar(){
 
     // ── CORREOS ──────────────────────────────────
     // Normalizar campus a mayúsculas y sin espacios para hacer lookup
-    const campusRaw = currentStudent.campusEmail||currentStudent.campus||'CSTI';
-    const campusKey = campusRaw.trim().toUpperCase();
-    // Buscar correo del campus; fallback a CSTI
-    const correoDestino = CONFIG.correos[campusKey]||CONFIG.correos['CSTI']||'';
+  const campusRaw = currentStudent.campusEmail||currentStudent.campus||'CSTI';
+const campusKey = campusRaw.trim().toUpperCase();
+const campusMap = {
+  'CSTI':'CSTI','STI':'CSTI','SANTIAGO':'CSTI',
+  'CVIR':'CVIR','VIR':'CVIR','VIRGEN':'CVIR','VILLA':'CVIR',
+  'CSTA':'CSTA','STA':'CSTA','SANTO DOMINGO':'CSTA','SD':'CSTA',
+};
+const campusNorm = campusMap[campusKey] || campusKey;
+const correoDestino = CONFIG.correos[campusNorm] || CONFIG.correos['CSTI'] || '';
+console.log(`📧 Campus raw: "${campusRaw}" → normalizado: "${campusNorm}" → correo: "${correoDestino}"`);
+console.log(`📧 CONFIG.correos:`, JSON.stringify(CONFIG.correos));
 
     const msgCampus =
       `SISTEMA TOGAS PUCMM — CICLO ${CONFIG.ciclo}\n` +
