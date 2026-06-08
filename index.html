@@ -1344,7 +1344,7 @@ console.log(`📧 CONFIG.correos:`, JSON.stringify(CONFIG.correos));
       // 1. Correo al campus correspondiente
       await enviarCorreo(
         correoDestino,
-        `[TOGAS] ${accion.toUpperCase()} — ${currentStudent.nombre}`,
+        `[TOGAS] ${accion==='devolucion'?'DEVOLUCIÓN':'ENTREGA'} — ${currentStudent.nombre}`,
         msgCampus
       );
 
