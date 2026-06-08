@@ -1299,9 +1299,11 @@ const campusMap = {
   'CSTA':'CSTA','STA':'CSTA','SANTO DOMINGO':'CSTA','SD':'CSTA',
 };
 const campusNorm = campusMap[campusKey] || campusKey;
+console.log('CORREOS EN CONFIG:', JSON.stringify(CONFIG.correos));
+console.log('CAMPUS NORM:', campusNorm);
+console.log('DESTINO:', CONFIG.correos[campusNorm]);
 const correoDestino = CONFIG.correos[campusNorm] || CONFIG.correos['CSTI'] || '';
 console.log(`📧 Campus raw: "${campusRaw}" → normalizado: "${campusNorm}" → correo: "${correoDestino}"`);
-console.log(`📧 CONFIG.correos:`, JSON.stringify(CONFIG.correos));
 
     const msgCampus =
       `SISTEMA TOGAS PUCMM — CICLO ${CONFIG.ciclo}\n` +
