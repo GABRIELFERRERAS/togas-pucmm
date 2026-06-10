@@ -1330,7 +1330,7 @@ console.log(`📧 Campus raw: "${campusRaw}" → normalizado: "${campusNorm}" �
   const lista = destinatarios.split(',').map(e => e.trim()).filter(e => e.length > 0);
   for (const email of lista) {
     try {
-      const response = await fetch('https://api.mailrelay.com/v1/send_mails', {
+      const response = await fetch('https://pucmm1.ipzmarketing.com/api/v1/send_mails', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
