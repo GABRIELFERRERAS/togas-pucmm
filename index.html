@@ -634,12 +634,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#010306;} html.modal
       </div>
       <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;">
         <button class="mbtn-dl" onclick="descargarReporte('CSTI')">📥 CSTI</button>
-        <button class="mbtn-save" style="width:100%;margin-top:6px;" onclick="sincronizarGoogleSheets()">🔄 Sincronizar Google Sheets (CSTI/CVIR + Inventario)</button>
         <button class="mbtn-dl" onclick="descargarReporte('CVIR')">📥 CVIR</button>
         <button class="mbtn-dl" onclick="descargarReporte('CSTA')">📥 CSTA</button>
         <button class="mbtn-dl" onclick="descargarReporte('maestros')">📥 Maestros</button>
         <button class="mbtn-dl" onclick="descargarReporte('todo')">📥 Completo</button>
       </div>
+       <button class="mbtn-save" style="width:100%;margin-top:6px;" onclick="sincronizarGoogleSheets()">🔄 Sincronizar Google Sheets (CSTI/CVIR + Inventario)</button>
       <div class="modal-btns"><button class="mbtn-cancel" onclick="closeModal('cfg')">Cerrar</button></div>
     </div>
 
@@ -1432,9 +1432,9 @@ console.log(`📧 Campus raw: "${campusRaw}" → normalizado: "${campusNorm}" �
     }
 
     imprimirTicket(accion,ahora,mora,cobroPiezas,totalCobro,faltantes,firmaImg,isMae);
-    sincronizarGoogleSheets(true); // true = silencioso, no muestra alertas
     hideLoading();
     mostrarPostTransaccion(accion,currentStudent,totalCobro,mora,cobroPiezas);
+    sincronizarGoogleSheets(true); // true = silencioso, no muestra alertas
   }catch(e){hideLoading();console.error(e);alert('Error: '+e.message);}
 }
 const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbz1HBDUhq5W6YLIjhdmJYGQ4R9VmqDTr6w5tji1zFd0-Lmj7Off5vheMR9QwHfjVUsWqw/exec';
