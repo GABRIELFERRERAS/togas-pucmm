@@ -1322,18 +1322,24 @@ async function finalizar(){
     await regRef.set(updateData,{merge:true});
     await db.collection('historial').add(regData);
 // ── SUMAR AL INVENTARIO AL DEVOLVER ──
-    if(accion==='devolucion' && piezas.traje){
+ // ── ACTUALIZAR INVENTARIO ──
+    // Devolución suma (+1) · Entrega resta (-1)
+    {
       const colorInv=String(currentStudent.color||'').trim().toUpperCase();
       const colKey=rayaToColKey(currentStudent.raya);
-      if(colorInv && colKey){
+      let delta=0;
+      if(accion==='devolucion' && piezas.traje) delta=1;   // vuelve al inventario
+      else if(accion==='entrega') delta=-1;                // sale del inventario
+      if(colorInv && colKey && delta!==0){
         try{
           await db.collection('config').doc('inventario').set({
-            inv:{ [colorInv]:{ [colKey]: firebase.firestore.FieldValue.increment(1) } }
+            inv:{ [colorInv]:{ [colKey]: firebase.firestore.FieldValue.increment(delta) } }
           },{merge:true});
           if(!INVENTARIO[colorInv]) INVENTARIO[colorInv]={col0:0,col1:0,col2:0,col3E:0,col3M:0};
-          INVENTARIO[colorInv][colKey]=(INVENTARIO[colorInv][colKey]||0)+1;
+          INVENTARIO[colorInv][colKey]=(INVENTARIO[colorInv][colKey]||0)+delta;
         }catch(invErr){console.error('Error inventario:',invErr);}
       }
+    }
     }
     // ── CORREOS ──────────────────────────────────
     // Normalizar campus a mayúsculas y sin espacios para hacer lookup
