@@ -590,6 +590,26 @@ html,body{width:100%;height:100%;overflow:hidden;background:#010306;} html.modal
 
     <!-- REPORTES -->
     <div class="msec" id="ms-rep">
+      <!-- REPORTE POR RANGO DE FECHAS -->
+      <div style="background:#030c1a;border:1px solid #0c2a42;border-radius:7px;padding:10px;margin-bottom:8px;">
+        <div style="font-size:8px;color:#3a7a9a;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">📅 Reporte por rango de fechas</div>
+        <div class="form-grid2">
+          <div class="form-group"><label class="form-label">Desde</label><input class="form-input" type="date" id="rep-desde"/></div>
+          <div class="form-group"><label class="form-label">Hasta</label><input class="form-input" type="date" id="rep-hasta"/></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Acción</label>
+          <select class="form-select" id="rep-accion">
+            <option value="todas">Todas (entregas y devoluciones)</option>
+            <option value="devolucion">Solo devoluciones</option>
+            <option value="entrega">Solo entregas</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="mbtn-dl" style="flex:1;" onclick="setReporteHoy()">📆 Hoy</button>
+          <button class="mbtn-save" style="flex:2;" onclick="descargarReporteFechas()">📥 Descargar rango</button>
+        </div>
+      </div>
       <div class="rep-btn-grid">
         <div class="rep-btn" onclick="descargarReporte('faltantes-entrega-est')">
           <i class="ti ti-users"></i>
@@ -877,6 +897,16 @@ async function doLogin(){
     }
     return;
   }
+  
+  function rayaToColKey(raya){
+  const r=String(raya||'').trim().toUpperCase();
+  if(r==='0'||r==='O') return 'col0';   // Técnico
+  if(r==='I') return 'col1';            // Grado
+  if(r==='II') return 'col2';           // Maestría
+  if(r==='ESPECIAL') return 'col3E';    // Doctorado Estudiante
+  if(r==='III') return 'col3M';         // Doctorado Maestro
+  return null;
+}
 
   // Login master
   showLoading("VERIFICANDO...");
@@ -1291,7 +1321,20 @@ async function finalizar(){
     updateData.ultimaAccion=regData;
     await regRef.set(updateData,{merge:true});
     await db.collection('historial').add(regData);
-
+// ── SUMAR AL INVENTARIO AL DEVOLVER ──
+    if(accion==='devolucion' && piezas.traje){
+      const colorInv=String(currentStudent.color||'').trim().toUpperCase();
+      const colKey=rayaToColKey(currentStudent.raya);
+      if(colorInv && colKey){
+        try{
+          await db.collection('config').doc('inventario').set({
+            inv:{ [colorInv]:{ [colKey]: firebase.firestore.FieldValue.increment(1) } }
+          },{merge:true});
+          if(!INVENTARIO[colorInv]) INVENTARIO[colorInv]={col0:0,col1:0,col2:0,col3E:0,col3M:0};
+          INVENTARIO[colorInv][colKey]=(INVENTARIO[colorInv][colKey]||0)+1;
+        }catch(invErr){console.error('Error inventario:',invErr);}
+      }
+    }
     // ── CORREOS ──────────────────────────────────
     // Normalizar campus a mayúsculas y sin espacios para hacer lookup
   const campusRaw = currentStudent.campusEmail||currentStudent.campus||'CSTI';
@@ -1890,7 +1933,46 @@ async function descargarReporte(tipo){
   }catch(e){console.log(e);alert('Error: '+e.message);}
   hideLoading();
 }
+function setReporteHoy(){
+  const h=new Date();
+  const s=h.getFullYear()+'-'+String(h.getMonth()+1).padStart(2,'0')+'-'+String(h.getDate()).padStart(2,'0');
+  document.getElementById('rep-desde').value=s;
+  document.getElementById('rep-hasta').value=s;
+}
 
+async function descargarReporteFechas(){
+  const desde=document.getElementById('rep-desde').value;
+  const hasta=document.getElementById('rep-hasta').value;
+  const filtro=document.getElementById('rep-accion').value;
+  if(!desde||!hasta){alert('Selecciona ambas fechas.');return;}
+  showLoading('GENERANDO REPORTE...');
+  try{
+    const [y1,m1,d1]=desde.split('-').map(Number);
+    const [y2,m2,d2]=hasta.split('-').map(Number);
+    const startISO=new Date(y1,m1-1,d1,0,0,0,0).toISOString();
+    const endISO=new Date(y2,m2-1,d2,23,59,59,999).toISOString();
+    const snap=await db.collection('historial')
+      .where('timestamp','>=',startISO)
+      .where('timestamp','<=',endISO)
+      .get();
+    const docs=snap.docs.map(x=>x.data())
+      .filter(r=> filtro==='todas' ? true : r.accion===filtro)
+      .sort((a,b)=>(a.timestamp||'').localeCompare(b.timestamp||''));
+    if(!docs.length){hideLoading();alert('No hay registros en ese rango de fechas.');return;}
+    let filas=[['Fecha/Hora','Acción','ID','Nombre','Tipo','Campus','Color','Raya','Mora','Piezas','Total','Faltantes','Operador']];
+    docs.forEach(r=>{
+      const fecha=r.timestamp?new Date(r.timestamp).toLocaleString('es-DO'):'—';
+      filas.push([fecha,r.accion||'—',r.id||'—',r.nombre||'—',r.tipo||'—',r.campus||'—',r.color||'—',rayaLabel(r.raya),r.mora||0,r.cobroPiezas||0,r.totalCobro||0,(r.faltantes||[]).join(' | '),r.operador||'—']);
+    });
+    const csv=filas.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const a=document.createElement('a');
+    a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+    const nom=filtro==='todas'?'movimientos':filtro+'s';
+    a.download=`reporte_${nom}_${desde}_a_${hasta}.csv`;
+    a.click();
+    hideLoading();
+  }catch(e){hideLoading();console.error(e);alert('Error: '+e.message);}
+}
 // ══════════════════════════════════════════════
 //  CIERRE DE CICLO
 // ══════════════════════════════════════════════
