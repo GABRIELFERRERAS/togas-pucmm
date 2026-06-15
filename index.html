@@ -898,16 +898,6 @@ async function doLogin(){
     return;
   }
   
-  function rayaToColKey(raya){
-  const r=String(raya||'').trim().toUpperCase();
-  if(r==='0'||r==='O') return 'col0';   // Técnico
-  if(r==='I') return 'col1';            // Grado
-  if(r==='II') return 'col2';           // Maestría
-  if(r==='ESPECIAL') return 'col3E';    // Doctorado Estudiante
-  if(r==='III') return 'col3M';         // Doctorado Maestro
-  return null;
-}
-
   // Login master
   showLoading("VERIFICANDO...");
   try{
@@ -1290,6 +1280,15 @@ function acceptSign(){signed=true;const st=document.getElementById('sign-status'
 // ══════════════════════════════════════════════
 //  FINALIZAR
 // ══════════════════════════════════════════════
+  function rayaToColKey(raya){
+  const r=String(raya||'').trim().toUpperCase();
+  if(r==='0'||r==='O') return 'col0';   // Técnico
+  if(r==='I') return 'col1';            // Grado
+  if(r==='II') return 'col2';           // Maestría
+  if(r==='ESPECIAL') return 'col3E';    // Doctorado Estudiante
+  if(r==='III') return 'col3M';         // Doctorado Maestro
+  return null;
+}
 async function finalizar(){
   const accion=getActualMod();
   if(accion==='entrega'&&!signed){alert('Se requiere la firma antes de finalizar.');return;}
