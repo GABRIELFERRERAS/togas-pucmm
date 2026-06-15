@@ -795,6 +795,7 @@ INVENTARIO['NEGRO'] = {col0:0, col1:0, col2:0, col3E:0, col3M:0};
 function getMoraStart(g){
   let d=new Date(g); d.setDate(d.getDate()+7);
   while(d.getDay()!==1) d.setDate(d.getDate()+1);
+  d.setHours(0,0,0,0);
   return d;
 }
 function calcMora(raya){
