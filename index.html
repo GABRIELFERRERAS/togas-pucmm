@@ -634,6 +634,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#010306;} html.modal
       </div>
       <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;">
         <button class="mbtn-dl" onclick="descargarReporte('CSTI')">📥 CSTI</button>
+        <button class="mbtn-save" style="width:100%;margin-top:6px;" onclick="sincronizarGoogleSheets()">🔄 Sincronizar Google Sheets (CSTI/CVIR + Inventario)</button>
         <button class="mbtn-dl" onclick="descargarReporte('CVIR')">📥 CVIR</button>
         <button class="mbtn-dl" onclick="descargarReporte('CSTA')">📥 CSTA</button>
         <button class="mbtn-dl" onclick="descargarReporte('maestros')">📥 Maestros</button>
@@ -1431,11 +1432,66 @@ console.log(`📧 Campus raw: "${campusRaw}" → normalizado: "${campusNorm}" �
     }
 
     imprimirTicket(accion,ahora,mora,cobroPiezas,totalCobro,faltantes,firmaImg,isMae);
+    sincronizarGoogleSheets(true); // true = silencioso, no muestra alertas
     hideLoading();
     mostrarPostTransaccion(accion,currentStudent,totalCobro,mora,cobroPiezas);
   }catch(e){hideLoading();console.error(e);alert('Error: '+e.message);}
 }
+const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbz1HBDUhq5W6YLIjhdmJYGQ4R9VmqDTr6w5tji1zFd0-Lmj7Off5vheMR9QwHfjVUsWqw/exec';
+const SHEETS_SECRET = '252525'; // igual al de Apps Script
 
+async function obtenerDatosCampus(campus){
+  const headers=['Matrícula','Emplid','Nombre','Color','Raya','Programa','Entregado','Devuelto','Mora','Cobro Piezas','Total Cobro','Faltantes','Operador','Fecha'];
+  const filas=[];
+  const snap=await db.collection('estudiantes').where('campusEmail','==',campus).get();
+  const procesados=new Set();
+  for(const doc of snap.docs){
+    const s=doc.data();
+    const key=s.emplid||s.mat;
+    if(procesados.has(key))continue;
+    procesados.add(key);
+    const r=(await db.collection('registros').doc(doc.id+'_'+CONFIG.ciclo).get()).data()||{};
+    const ua=r.ultimaAccion||{};
+    filas.push([
+      s.mat||'',s.emplid||'',s.nombre||'',s.color||'',rayaLabel(s.raya),
+      s.programa||'',r.entregado?'SÍ':'NO',r.devuelto?'SÍ':'NO',
+      ua.mora||0,ua.cobroPiezas||0,ua.totalCobro||0,
+      (ua.faltantes||[]).join(', '),ua.operador||'—',
+      ua.timestamp?new Date(ua.timestamp).toLocaleString('es-DO'):'—'
+    ]);
+  }
+  return {headers,filas};
+}
+
+function obtenerDatosInventario(){
+  const headers=['Color','Técnico (0)','Grado (I)','Maestría (II)','Doc.Estudiante (3E)','Doc.Maestro (3M)'];
+  const filas=Object.keys(INVENTARIO).map(color=>{
+    const inv=INVENTARIO[color];
+    return [color, inv.col0||0, inv.col1||0, inv.col2||0, inv.col3E||0, inv.col3M||0];
+  });
+  return {headers,filas};
+}
+
+async function enviarASheet(tipo,{headers,filas}){
+  await fetch(SHEETS_WEBHOOK_URL,{
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({secret:SHEETS_SECRET,tipo,headers,filas})
+  });
+}
+
+async function sincronizarGoogleSheets(silencioso){
+  if(!silencioso) showLoading('SINCRONIZANDO CON GOOGLE SHEETS...');
+  try{
+    await enviarASheet('CSTI', await obtenerDatosCampus('CSTI'));
+    await enviarASheet('CVIR', await obtenerDatosCampus('CVIR'));
+    await enviarASheet('Inventario', obtenerDatosInventario());
+    if(!silencioso){hideLoading(); alert('✅ Google Sheet actualizada correctamente.');}
+  }catch(e){
+    if(!silencioso){hideLoading(); alert('Error sincronizando: '+e.message);}
+    console.error('Error sync sheets:',e);
+  }
+}
 function generarHTMLTicket(accion,ahora,mora,cobroPiezas,totalCobro,diasRetraso,faltantesTexto,contacto,campusGrad,programa,fechaLimite,fechaActStr,tituloAccion,firmaImg){
   return `<html><head><meta charset="UTF-8"><style>
     @page{size:80mm auto;margin:3mm 4mm;}
