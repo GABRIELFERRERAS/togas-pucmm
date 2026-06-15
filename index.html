@@ -71,7 +71,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#010306;} html.modal
 .top-btn{background:#02070f;border:1px solid #0c2a42;border-radius:6px;color:#a0d8f0;font-size:8.5px;font-weight:600;padding:4px 8px;cursor:pointer;display:flex;align-items:center;gap:3px;transition:all 0.15s;font-family:'Exo 2',sans-serif;}
 .top-btn:hover{border-color:#00b4ff;color:#00c8ff;}
 .top-btn i{font-size:12px;}
-.top-btn.master-only{border-color:#1a3a5c;}
+.top-btn.SUMINISTROS-only{border-color:#1a3a5c;}
 .operator-badge{background:#040f1e;border:1px solid #1a4a6a;border-radius:5px;padding:3px 8px;font-size:8px;color:#5a9abc;display:flex;align-items:center;gap:4px;}
 .operator-badge i{font-size:11px;color:#00b4ff;}
 .cycle-info{font-size:8.5px;color:#fff;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;align-items:center;}
@@ -342,8 +342,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#010306;} html.modal
 
   <div class="top-bar">
     <div class="top-left">
-      <button class="top-btn master-only" id="btn-cfg" onclick="openModal('cfg')"><i class="ti ti-settings"></i> Config</button>
-      <button class="top-btn master-only" id="btn-hist" onclick="openModal('hist')"><i class="ti ti-chart-bar"></i> Histórico</button>
+      <button class="top-btn SUMINISTROS-only" id="btn-cfg" onclick="openModal('cfg')"><i class="ti ti-settings"></i> Config</button>
+      <button class="top-btn SUMINISTROS-only" id="btn-hist" onclick="openModal('hist')"><i class="ti ti-chart-bar"></i> Histórico</button>
       <button class="top-btn" onclick="openModal('add')"><i class="ti ti-plus"></i> Agregar</button>
       <div class="operator-badge"><i class="ti ti-user"></i><span id="operator-name">—</span></div>
     </div>
@@ -671,12 +671,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#010306;} html.modal
         <div class="form-group"><label class="form-label">Correo CSTA</label><input class="form-input" id="cfg-csta" placeholder="csta@pucmm.edu.do"/></div>
       </div>
       <div style="background:#030c1a;border:1px solid #0c2a42;border-radius:7px;padding:10px;margin-top:4px;">
-        <div style="font-size:9px;color:#3a7a9a;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Cambiar Contraseña Master</div>
+        <div style="font-size:9px;color:#3a7a9a;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Cambiar Contraseña SUMINISTROS</div>
         <div class="form-grid2">
-          <div class="form-group"><label class="form-label">Nueva contraseña</label><input class="form-input" type="password" id="new-master-pass" placeholder="Nueva contraseña"/></div>
-          <div class="form-group"><label class="form-label">Confirmar</label><input class="form-input" type="password" id="confirm-master-pass" placeholder="Confirmar"/></div>
+          <div class="form-group"><label class="form-label">Nueva contraseña</label><input class="form-input" type="password" id="new-SUMINISTROS-pass" placeholder="Nueva contraseña"/></div>
+          <div class="form-group"><label class="form-label">Confirmar</label><input class="form-input" type="password" id="confirm-SUMINISTROS-pass" placeholder="Confirmar"/></div>
         </div>
-        <button class="mbtn-danger" style="width:100%;" onclick="cambiarPasswordMaster()">CAMBIAR CONTRASEÑA MASTER</button>
+        <button class="mbtn-danger" style="width:100%;" onclick="cambiarPasswordSUMINISTROS()">CAMBIAR CONTRASEÑA SUMINISTROS</button>
       </div>
       <div class="modal-btns">
         <button class="mbtn-cancel" onclick="closeModal('cfg')">Cancelar</button>
@@ -795,7 +795,7 @@ let CONFIG = {
   cobros:"CUENTAESTUDIANTIL-CSD@PUCMM.EDU.DO, RANDYSANCHEZ@PUCMM.EDU.DO, GENRRISEUGENIA@PUCMM.EDU.DO"
 }
 };
-let CURRENT_USER = null; // {name, isMaster}
+let CURRENT_USER = null; // {name, isSUMINISTROS}
 let OPERADORES = []; // [{name, passHash}]
 let cid='', cmod='devolucion', submod='entrega', signed=false;
 let drawing=false, lastX=0, lastY=0, ctx, currentStudent=null, addTab='est';
@@ -834,14 +834,14 @@ function calcMora(raya){
 // ══════════════════════════════════════════════
 //  LOGIN
 // ══════════════════════════════════════════════
-const MASTER_EMAIL = "admin@togas.com";
+const SUMINISTROS_EMAIL = "admin@togas.com";
 
 auth.onAuthStateChanged(user => {
   if(user){
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('app').style.display='flex';
-    CURRENT_USER = {name:'Master', isMaster:true};
-    document.getElementById('operator-name').textContent='Master';
+    CURRENT_USER = {name:'SUMINISTROS', isSUMINISTROS:true};
+    document.getElementById('operator-name').textContent='SUMINISTROS';
     initApp();
   }
 });
@@ -881,10 +881,10 @@ async function doLogin(){
     if(op && btoa(pass)===op.passHash){
       document.getElementById('login-screen').classList.add('hidden');
       document.getElementById('app').style.display='flex';
-      CURRENT_USER={name:selectedOperador,isMaster:op.isMaster||false};
+      CURRENT_USER={name:selectedOperador,isSUMINISTROS:op.isSUMINISTROS||false};
       document.getElementById('operator-name').textContent=selectedOperador;
       // Mostrar/ocultar botones según rol
-      if(op.isMaster){
+      if(op.isSUMINISTROS){
         document.getElementById('btn-cfg').style.display='flex';
         document.getElementById('btn-hist').style.display='flex';
       } else {
@@ -899,14 +899,14 @@ async function doLogin(){
     return;
   }
   
-  // Login master
+  // Login SUMINISTROS
   showLoading("VERIFICANDO...");
   try{
-    await auth.signInWithEmailAndPassword(MASTER_EMAIL, pass);
+    await auth.signInWithEmailAndPassword(SUMINISTROS_EMAIL, pass);
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('app').style.display='flex';
-    CURRENT_USER={name:'Master',isMaster:true};
-    document.getElementById('operator-name').textContent='Master';
+    CURRENT_USER={name:'SUMINISTROS',isSUMINISTROS:true};
+    document.getElementById('operator-name').textContent='SUMINISTROS';
     document.getElementById('btn-cfg').style.display='flex';
     document.getElementById('btn-hist').style.display='flex';
     hideLoading(); initApp();
@@ -920,7 +920,7 @@ async function doLogin(){
 document.getElementById('login-pass').addEventListener('keypress',e=>{if(e.key==='Enter')doLogin();});
 
 async function doLogout(){
-  if(CURRENT_USER&&CURRENT_USER.isMaster) await auth.signOut();
+  if(CURRENT_USER&&CURRENT_USER.isSUMINISTROS) await auth.signOut();
   resetLoginScreen();
 }
 
@@ -1817,16 +1817,16 @@ async function renderUserList(){
     <div class="user-item">
       <div class="user-info">
         <div class="user-name">
-          <i class="ti ti-${u.isMaster?'shield-check':'user'}" style="font-size:11px;color:${u.isMaster?'#ffaa00':'#00b4ff'};"></i>
+          <i class="ti ti-${u.isSUMINISTROS?'shield-check':'user'}" style="font-size:11px;color:${u.isSUMINISTROS?'#ffaa00':'#00b4ff'};"></i>
           ${u.name}
         </div>
-        <div class="user-role" style="color:${u.isMaster?'#ffaa00':'#3a7a9a'};">
-          ${u.isMaster?'🔑 Master — Acceso total':'Operador — Entrega/Devolución'}
+        <div class="user-role" style="color:${u.isSUMINISTROS?'#ffaa00':'#3a7a9a'};">
+          ${u.isSUMINISTROS?'🔑 SUMINISTROS — Acceso total':'Operador — Entrega/Devolución'}
         </div>
       </div>
       <div style="display:flex;gap:4px;">
-        <button class="user-del" style="border-color:${u.isMaster?'#ffaa00':'#00b4ff'};color:${u.isMaster?'#ffaa00':'#00b4ff'};" onclick="toggleRolUsuario(${i})">
-          ${u.isMaster?'→ Operador':'→ Master'}
+        <button class="user-del" style="border-color:${u.isSUMINISTROS?'#ffaa00':'#00b4ff'};color:${u.isSUMINISTROS?'#ffaa00':'#00b4ff'};" onclick="toggleRolUsuario(${i})">
+          ${u.isSUMINISTROS?'→ Operador':'→ SUMINISTROS'}
         </button>
         <button class="user-del" onclick="eliminarUsuario(${i})">Eliminar</button>
       </div>
@@ -1835,9 +1835,9 @@ async function renderUserList(){
 
 async function toggleRolUsuario(idx){
   const u=OPERADORES[idx];
-  const nuevoRol=u.isMaster?'Operador':'Master';
-  if(!confirm(`¿Cambiar a "${u.name}" de ${u.isMaster?'Master':'Operador'} a ${nuevoRol}?`))return;
-  OPERADORES[idx].isMaster=!u.isMaster;
+  const nuevoRol=u.isSUMINISTROS?'Operador':'SUMINISTROS';
+  if(!confirm(`¿Cambiar a "${u.name}" de ${u.isSUMINISTROS?'SUMINISTROS':'Operador'} a ${nuevoRol}?`))return;
+  OPERADORES[idx].isSUMINISTROS=!u.isSUMINISTROS;
   await db.collection('config').doc('operadores').set({lista:OPERADORES});
   renderUserList();
   renderLoginUsers();
@@ -2099,11 +2099,11 @@ async function guardarManual(){
 }
 
 // ══════════════════════════════════════════════
-//  CAMBIAR CONTRASEÑA MASTER
+//  CAMBIAR CONTRASEÑA SUMINISTROS
 // ══════════════════════════════════════════════
-async function cambiarPasswordMaster(){
-  const np=document.getElementById('new-master-pass').value;
-  const cp=document.getElementById('confirm-master-pass').value;
+async function cambiarPasswordSUMINISTROS(){
+  const np=document.getElementById('new-SUMINISTROS-pass').value;
+  const cp=document.getElementById('confirm-SUMINISTROS-pass').value;
   if(!np||!cp){alert('Ingresa y confirma la nueva contraseña.');return;}
   if(np!==cp){alert('Las contraseñas no coinciden.');return;}
   if(np.length<8){alert('La contraseña debe tener al menos 8 caracteres.');return;}
@@ -2111,9 +2111,9 @@ async function cambiarPasswordMaster(){
   try{
     await auth.currentUser.updatePassword(np);
     hideLoading();
-    document.getElementById('new-master-pass').value='';
-    document.getElementById('confirm-master-pass').value='';
-    alert('✅ Contraseña master actualizada correctamente.');
+    document.getElementById('new-SUMINISTROS-pass').value='';
+    document.getElementById('confirm-SUMINISTROS-pass').value='';
+    alert('✅ Contraseña SUMINISTROS actualizada correctamente.');
   }catch(e){
     hideLoading();
     if(e.code==='auth/requires-recent-login'){alert('Por seguridad, cierra sesión y vuelve a entrar antes de cambiar la contraseña.');}
