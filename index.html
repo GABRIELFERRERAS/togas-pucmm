@@ -1054,10 +1054,11 @@ function mostrarEstudiante(s){
   }
 
   const dr=document.getElementById('datos-row');
-  const needSign=true;
+const accionActualSign=cmod==='maestros'?submod:cmod;
+  const needSign=accionActualSign!=='devolucion';
   dr.className='datos-row '+(needSign?'con-firma':'sin-firma');
   document.getElementById('sign-panel').style.display=needSign?'flex':'none';
-  signed=false;
+  signed=!needSign;
   document.getElementById('sign-status').textContent='Dibuje su firma arriba';
   document.getElementById('sign-status').classList.remove('signed');
 
@@ -1148,7 +1149,8 @@ function acceptSign(){
 // ══════════════════════════════════════════════
 async function finalizar(){
   if(!currentStudent){alert('No hay estudiante seleccionado.');return;}
-  if(!signed){alert('Por favor acepte la firma antes de finalizar.');return;}
+  const accionCheck=cmod==='maestros'?submod:cmod;
+  if(!signed&&accionCheck!=='devolucion'){alert('Por favor acepte la firma antes de finalizar.');return;}
   const s=currentStudent;
   const accion=cmod==='maestros'?submod:cmod;
   const isMae=s._tipo==='maestro';
