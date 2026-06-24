@@ -1,0 +1,1824 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestión de Trajes Académicos — PUCMM v3.0</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;height:100%;overflow:hidden;background:#010306;} html.modal-open,body.modal-open{overflow:auto!important;position:static!important;}
+.login-screen{position:fixed;inset:0;background:#010306;display:flex;align-items:center;justify-content:center;z-index:1000;flex-direction:column;gap:16px;}
+.login-screen.hidden{display:none;}
+.login-box{background:#02070f;border:1px solid #0c2a42;border-radius:14px;padding:28px 24px;width:90%;max-width:320px;text-align:center;}
+.login-logo{font-family:'Orbitron',monospace;font-size:11px;font-weight:900;letter-spacing:3px;color:#00c8ff;margin-bottom:3px;}
+.login-sub{font-size:8px;color:#2a6a8a;letter-spacing:2px;margin-bottom:16px;}
+.login-title{font-family:'Orbitron',monospace;font-size:12px;color:#fff;margin-bottom:14px;letter-spacing:2px;}
+.login-input{width:100%;background:#030c1a;border:1px solid #1a4a6a;border-radius:7px;color:#d0e8f8;font-size:16px;padding:9px 12px;font-family:'Exo 2',sans-serif;margin-bottom:8px;text-align:center;letter-spacing:2px;-webkit-appearance:none;}
+.login-input:focus{outline:none;border-color:#00b4ff;}
+.login-btn{width:100%;background:#020d06;border:2px solid #00ff88;border-radius:8px;padding:11px;cursor:pointer;font-family:'Orbitron',monospace;font-size:10px;font-weight:700;color:#00ff88;letter-spacing:2px;transition:all 0.2s;}
+.login-btn:hover{background:#041509;}
+.login-err{font-size:10px;color:#ff5555;margin-top:5px;display:none;}
+.login-err.visible{display:block;}
+.login-users{margin-top:12px;display:flex;flex-direction:column;gap:5px;max-height:140px;overflow-y:auto;}
+.login-user-btn{background:#030c1a;border:1px solid #1a4a6a;border-radius:6px;padding:7px 10px;cursor:pointer;color:#a0d8f0;font-size:10px;font-weight:600;text-align:left;transition:all 0.15s;display:flex;align-items:center;gap:6px;}
+.login-user-btn:hover{border-color:#00b4ff;color:#00c8ff;}
+.login-user-btn i{font-size:13px;color:#3a7a9a;}
+.login-sep{font-size:8px;color:#1a4a6a;text-align:center;margin:6px 0;letter-spacing:2px;}
+.post-screen{position:fixed;inset:0;background:#010306;display:none;align-items:center;justify-content:center;z-index:900;flex-direction:column;gap:16px;}
+.post-screen.visible{display:flex;}
+.post-box{background:#02070f;border:1px solid #0c2040;border-radius:14px;padding:28px 24px;width:90%;max-width:360px;text-align:center;}
+.post-icon{font-size:40px;margin-bottom:10px;}
+.post-title{font-family:'Orbitron',monospace;font-size:12px;color:#00ff88;letter-spacing:2px;margin-bottom:6px;}
+.post-name{font-size:13px;color:#fff;font-weight:600;margin-bottom:4px;}
+.post-detail{font-size:10px;color:#5a9abc;margin-bottom:16px;}
+.post-cobro{background:#0a0203;border:1px solid #5a0a0a;border-radius:7px;padding:8px;margin-bottom:14px;font-size:11px;color:#ff5555;font-weight:700;}
+.post-btns{display:flex;flex-direction:column;gap:8px;}
+.post-btn-new{background:#020d06;border:2px solid #00ff88;border-radius:8px;padding:11px;cursor:pointer;font-family:'Orbitron',monospace;font-size:10px;font-weight:700;color:#00ff88;letter-spacing:2px;transition:all 0.2s;}
+.post-btn-new:hover{background:#041509;}
+.post-btn-out{background:#0a0203;border:1px solid #ff4422;border-radius:8px;padding:10px;cursor:pointer;font-family:'Orbitron',monospace;font-size:9px;font-weight:700;color:#ff4422;letter-spacing:2px;transition:all 0.2s;}
+.post-btn-out:hover{background:#1a0200;}
+.post-operator{font-size:9px;color:#3a7a9a;margin-top:8px;}
+.app{font-family:'Exo 2',sans-serif;background:#010306;height:100vh;display:flex;flex-direction:column;align-items:center;padding:0.4rem 0.7rem;color:#d0e8f8;position:relative;overflow:hidden;}
+.grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(0,150,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,150,255,0.02) 1px,transparent 1px);background-size:36px 36px;pointer-events:none;}
+.corner{position:absolute;width:35px;height:35px;border-color:#00b4ff;border-style:solid;opacity:0.15;}
+.corner-tl{top:4px;left:4px;border-width:2px 0 0 2px;}.corner-tr{top:4px;right:4px;border-width:2px 2px 0 0;}
+.corner-bl{bottom:4px;left:4px;border-width:0 0 2px 2px;}.corner-br{bottom:4px;right:4px;border-width:0 2px 2px 0;}
+.header{text-align:center;z-index:1;width:100%;margin-bottom:0.25rem;}
+.header-top{font-family:'Orbitron',monospace;font-size:10px;font-weight:900;letter-spacing:3px;color:#00c8ff;text-transform:uppercase;}
+.header-sub{font-size:8px;color:#2a6a8a;letter-spacing:2px;text-transform:uppercase;}
+.top-bar{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:900px;z-index:1;margin-bottom:0.3rem;gap:5px;}
+.top-left{display:flex;gap:4px;align-items:center;}
+.top-btn{background:#02070f;border:1px solid #0c2a42;border-radius:6px;color:#a0d8f0;font-size:8.5px;font-weight:600;padding:4px 8px;cursor:pointer;display:flex;align-items:center;gap:3px;transition:all 0.15s;font-family:'Exo 2',sans-serif;}
+.top-btn:hover{border-color:#00b4ff;color:#00c8ff;}
+.top-btn i{font-size:12px;}
+.top-btn.SUMINISTROS-only{border-color:#1a3a5c;}
+.operator-badge{background:#040f1e;border:1px solid #1a4a6a;border-radius:5px;padding:3px 8px;font-size:8px;color:#5a9abc;display:flex;align-items:center;gap:4px;}
+.operator-badge i{font-size:11px;color:#00b4ff;}
+.cycle-info{font-size:8.5px;color:#fff;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;align-items:center;}
+.cycle-info span{color:#00c8ff;font-weight:600;}
+.sdot{width:5px;height:5px;border-radius:50%;background:#00ff88;display:inline-block;margin-right:3px;}
+.logout-btn{background:#0a0203;border:1px solid #4a0808;border-radius:5px;color:#ff5555;font-size:8px;padding:3px 7px;cursor:pointer;font-family:'Exo 2',sans-serif;}
+.mod-tabs{display:flex;gap:5px;width:100%;max-width:900px;z-index:1;margin-bottom:0.3rem;}
+.mod-tab{flex:1;background:#02070f;border:1px solid #0c2040;border-radius:7px;padding:6px 4px;cursor:pointer;text-align:center;transition:all 0.15s;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.mod-tab:hover{border-color:#00b4ff;}
+.mod-tab.active{border-color:#00b4ff;background:#040f1e;}
+.mod-tab i{font-size:15px;color:#00b4ff;}
+.mod-tab span{font-size:8.5px;font-weight:600;letter-spacing:1px;color:#fff;text-transform:uppercase;}
+.mod-tab.active span{color:#00c8ff;}
+.sub-tabs{display:none;gap:5px;width:100%;max-width:900px;z-index:1;margin-bottom:0.3rem;}
+.sub-tabs.visible{display:flex;}
+.sub-tab{flex:1;background:#020d06;border:1px solid #0a2a14;border-radius:6px;padding:5px;cursor:pointer;text-align:center;font-size:8.5px;font-weight:600;color:#5aaa5a;transition:all 0.15s;}
+.sub-tab.active{border-color:#00ff88;color:#00ff88;background:#021506;}
+.main-area{width:100%;max-width:900px;z-index:1;flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.fase-teclado{display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:10px;}
+.teclado-container{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;max-width:320px;}
+.display-row{display:flex;gap:5px;width:100%;}
+.display-box{background:#02070f;border:1px solid #0c2a42;border-radius:8px;padding:8px 12px;flex:1;position:relative;}
+.display-label{font-size:8px;letter-spacing:2px;color:#3a7a9a;text-transform:uppercase;margin-bottom:4px;text-align:center;}
+.id-display{font-family:'Orbitron',monospace;font-size:20px;font-weight:700;color:#00c8ff;letter-spacing:4px;min-height:32px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:2px;}
+.id-char{background:#030c1a;border:1px solid #0c2a42;border-radius:3px;width:19px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;}
+.id-char.filled{border-color:#00b4ff;color:#00e5ff;}
+.id-char.cursor{border-color:#00b4ff;animation:blink 1s infinite;}
+@keyframes blink{0%,100%{border-color:#00b4ff;}50%{border-color:#030c1a;}}
+.id-placeholder{color:#0e2a3a;font-size:14px;letter-spacing:5px;}
+.clear-btn{background:#0a0203;border:1.5px solid #992200;border-radius:8px;color:#ff4422;font-size:8px;font-weight:700;cursor:pointer;padding:0 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:46px;}
+.clear-btn i{font-size:15px;}
+.msg-box{border-radius:7px;padding:6px 10px;font-size:10px;display:none;text-align:center;width:100%;}
+.msg-box.visible{display:block;}
+.msg-box.err{background:#0f0508;border:1px solid #4a0820;color:#ff6688;}
+.msg-box.warn{background:#0f0a02;border:1px solid #aa6600;color:#ffaa33;}
+.msg-box.info{background:#020f0a;border:1px solid #006630;color:#00ff88;}
+.keypad-wrap{background:#010306;border:1px solid #0c2a42;border-radius:10px;padding:10px;width:100%;}
+.keypad-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.key-btn{background:#fff;border:2px solid #ccdde8;border-radius:8px;height:52px;font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:#111;cursor:pointer;transition:all 0.1s;display:flex;align-items:center;justify-content:center;user-select:none;box-shadow:0 2px 0 #99bbcc;}
+.key-btn:hover{background:#e8f4ff;border-color:#00b4ff;}
+.key-btn:active{transform:translateY(2px);box-shadow:none;}
+.key-btn.key-del{background:#fff0f0;border-color:#ffaaaa;color:#cc0000;font-size:16px;box-shadow:0 2px 0 #ffaaaa;}
+.key-btn.key-ok{background:#001a0a;border-color:#00ff88;color:#00ff88;grid-column:span 2;font-size:11px;letter-spacing:2px;box-shadow:0 2px 0 #007744;}
+.fase-datos{display:none;flex-direction:column;gap:5px;height:100%;}
+.fase-datos.visible{display:flex;}
+.datos-row{display:grid;gap:6px;flex:1;overflow:hidden;}
+.datos-row.con-firma{grid-template-columns:1fr 1fr;}
+.datos-row.sin-firma{grid-template-columns:1fr;}
+.student-card{background:#02070f;border:1px solid #0c2040;border-radius:8px;padding:9px;overflow-y:auto;}
+.s-badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:8px;font-weight:700;letter-spacing:1px;margin-bottom:4px;}
+.badge-est{background:#0a1f35;color:#00c8ff;border:1px solid #00c8ff;}
+.badge-mae{background:#1a0a35;color:#cc88ff;border:1px solid #cc88ff;}
+.s-name{font-size:12px;font-weight:600;color:#fff;margin-bottom:5px;border-bottom:1px solid #0c2040;padding-bottom:4px;line-height:1.3;}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:3px 6px;}
+.sf .fl{color:#3a7a9a;text-transform:uppercase;font-size:7.5px;margin-bottom:1px;}
+.sf .fv{color:#a0d8f0;font-weight:500;font-size:9.5px;word-break:break-word;}
+.sf .fv.hi{color:#00c8ff;}.sf .fv.warn{color:#ffaa00;font-size:8.5px;line-height:1.3;}.sf .fv.spec{color:#ff55cc;}
+.cel-row{grid-column:span 2;display:flex;align-items:center;gap:4px;margin-top:1px;}
+.cel-lbl{color:#3a7a9a;font-size:7.5px;text-transform:uppercase;white-space:nowrap;min-width:38px;}
+.cel-input{background:#030c1a;border:1px solid #1a4a6a;border-radius:3px;color:#a0d8f0;font-size:9px;padding:2px 5px;font-family:'Exo 2',sans-serif;flex:1;}
+.cel-save{background:#020d06;border:1px solid #00ff88;border-radius:3px;color:#00ff88;font-size:8px;padding:2px 6px;cursor:pointer;}
+.mora-box{background:#0a0203;border:1px solid #5a0a0a;border-radius:5px;padding:5px 8px;margin-top:5px;font-size:9px;color:#ff5555;display:none;line-height:1.6;}
+.mora-box.visible{display:block;}
+.piezas-panel{background:#02070f;border:1px solid #0a3a0a;border-radius:8px;padding:8px;margin-top:5px;}
+.piezas-title{font-size:8px;letter-spacing:2px;color:#5aaa2a;text-transform:uppercase;margin-bottom:5px;}
+.piezas-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;}
+.pieza-btn{background:#020c02;border:2px solid #1a4a0a;border-radius:7px;padding:6px 3px;cursor:pointer;text-align:center;transition:all 0.15s;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.pieza-btn.ok{border-color:#00ff88;background:#021502;}
+.pieza-btn.falta{border-color:#ff5555;background:#0f0202;}
+.pieza-icon{font-size:17px;}
+.pieza-name{font-size:7px;font-weight:600;color:#a0d8f0;}
+.pieza-precio{font-size:7px;color:#3a7a5a;}
+.pieza-btn.falta .pieza-precio{color:#ff5555;}
+.cobro-box{background:#0a0203;border:1px solid #5a0a0a;border-radius:5px;padding:5px 8px;margin-top:5px;font-size:10px;color:#ff5555;display:none;text-align:center;font-weight:700;}
+.cobro-box.visible{display:block;}
+.sign-panel{background:#02070f;border:1px solid #0c2040;border-radius:8px;padding:9px;display:flex;flex-direction:column;gap:5px;}
+.sign-lbl{font-size:8px;letter-spacing:2px;color:#3a7a9a;text-transform:uppercase;}
+.sign-wrap{background:#fff;border-radius:4px;padding:2px;border:1px solid #1a4a6a;flex:1;}
+.sign-canvas{background:#fff;border-radius:3px;display:block;cursor:crosshair;touch-action:none;width:100%;height:100%;min-height:130px;}
+.sign-actions{display:flex;gap:5px;}
+.sign-btn{flex:1;padding:6px;border-radius:5px;font-size:9px;font-weight:600;cursor:pointer;border:1px solid;font-family:'Exo 2',sans-serif;}
+.sign-clr{background:#0a0203;border-color:#5a0808;color:#ff5555;}
+.sign-acc{background:#020d06;border-color:#00ff88;color:#00ff88;}
+.sign-status{font-size:8px;color:#3a7a5a;text-align:center;}
+.sign-status.signed{color:#00ff88;}
+.bottom-row{display:flex;gap:6px;margin-top:5px;}
+.back-btn{background:#02070f;border:1px solid #1a4a6a;border-radius:7px;padding:7px 12px;cursor:pointer;color:#5a9abc;font-size:9px;font-weight:600;font-family:'Exo 2',sans-serif;}
+.back-btn:hover{border-color:#00b4ff;}
+.final-btn{flex:1;background:#020d06;border:2px solid #00ff88;border-radius:8px;padding:8px;cursor:pointer;text-align:center;font-family:'Orbitron',monospace;font-size:10px;font-weight:700;color:#00ff88;letter-spacing:2px;transition:all 0.2s;}
+.final-btn:hover{background:#041509;}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:300;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.overlay.visible{display:flex;}
+.modal{background:#020c18;border:1px solid #0c2a42;border-radius:12px;padding:14px;width:94%;max-width:560px;overflow-y:visible;margin:16px auto;}
+.modal-lg{max-width:720px;}
+.modal-title{font-family:'Orbitron',monospace;font-size:10px;color:#00c8ff;letter-spacing:2px;margin-bottom:8px;text-align:center;}
+.mtabs{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;}
+.mtab{flex:1;padding:5px;border-radius:5px;border:1px solid #0c2a42;background:#010306;color:#5a9abc;font-size:8.5px;font-weight:600;cursor:pointer;text-align:center;min-width:60px;}
+.mtab.active{border-color:#00b4ff;color:#00c8ff;background:#040f1e;}
+.msec{display:none;}.msec.active{display:block;}
+.form-group{margin-bottom:6px;}
+.form-label{font-size:8px;color:#3a7a9a;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;display:block;}
+.form-input,.form-select{width:100%;background:#030c1a;border:1px solid #1a4a6a;border-radius:5px;color:#d0e8f8;font-size:16px;padding:8px 10px;font-family:'Exo 2',sans-serif;-webkit-appearance:none;appearance:none;}
+.form-input:focus,.form-select:focus{outline:none;border-color:#00b4ff;}
+.form-grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.form-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
+.modal-btns{display:flex;gap:6px;margin-top:8px;}
+.mbtn-cancel{flex:1;padding:7px;border-radius:6px;border:1px solid #1a4a6a;background:#010306;color:#5a9abc;font-size:9px;cursor:pointer;}
+.mbtn-save{flex:1;padding:7px;border-radius:6px;border:1px solid #00ff88;background:#020d06;color:#00ff88;font-size:9px;font-weight:700;cursor:pointer;font-family:'Orbitron',monospace;}
+.mbtn-save:hover{background:#041509;}
+.mbtn-dl{padding:5px 10px;border-radius:5px;border:1px solid #00b4ff;background:#040f1e;color:#00b4ff;font-size:8.5px;font-weight:700;cursor:pointer;}
+.mbtn-danger{padding:5px 10px;border-radius:5px;border:1px solid #ff4422;background:#0a0203;color:#ff4422;font-size:8.5px;font-weight:700;cursor:pointer;}
+.inv-wrap{overflow-x:auto;}
+.inv-table{border-collapse:collapse;font-size:9px;width:100%;}
+.inv-table th{background:#040f1e;color:#00c8ff;padding:6px 8px;text-align:center;border:1px solid #0c2a42;white-space:nowrap;}
+.inv-table th.color-col{text-align:left;min-width:90px;}
+.inv-table td{padding:4px 6px;border:1px solid #060f1a;text-align:center;color:#a0d8f0;}
+.inv-table td.color-name{text-align:left;font-weight:600;}
+.inv-table input[type=number]{background:#030c1a;border:1px solid #1a4a6a;border-radius:3px;color:#d0e8f8;font-size:9px;padding:2px 3px;width:44px;text-align:center;}
+.color-amarillo{color:#FFD700;}.color-amarillo-cl{color:#FFFF99;}.color-azul-cielo{color:#87CEEB;}.color-azul-oscuro{color:#00BFFF;}.color-rojo{color:#FF4444;}.color-negro{color:#888;}
+.stat-card{background:#030c1a;border:1px solid #0c2a42;border-radius:7px;padding:8px;margin-bottom:6px;}
+.stat-title{font-size:9px;color:#3a7a9a;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;}
+.stat-row{display:flex;align-items:center;margin-bottom:3px;gap:6px;}
+.stat-label{font-size:9px;color:#a0d8f0;min-width:130px;}
+.stat-bar-wrap{background:#020c18;border-radius:3px;height:6px;flex:1;overflow:hidden;}
+.stat-bar{height:100%;border-radius:3px;transition:width 0.5s;}
+.stat-val{font-size:10px;font-weight:700;color:#00c8ff;min-width:22px;text-align:right;}
+.rep-btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;}
+.rep-btn{background:#030c1a;border:1px solid #0c2a42;border-radius:7px;padding:10px;cursor:pointer;text-align:center;transition:all 0.15s;}
+.rep-btn:hover{border-color:#00b4ff;}
+.rep-btn i{font-size:20px;color:#00b4ff;display:block;margin-bottom:4px;}
+.rep-btn span{font-size:9px;color:#a0d8f0;font-weight:600;}
+.rep-btn small{font-size:8px;color:#3a7a9a;display:block;}
+.user-list{display:flex;flex-direction:column;gap:5px;margin-bottom:8px;max-height:200px;overflow-y:auto;}
+.user-item{background:#030c1a;border:1px solid #0c2a42;border-radius:6px;padding:7px 10px;display:flex;justify-content:space-between;align-items:center;}
+.user-info{display:flex;flex-direction:column;gap:1px;}
+.user-name{font-size:10px;color:#fff;font-weight:600;}
+.user-role{font-size:8px;color:#3a7a9a;}
+.user-del{background:#0a0203;border:1px solid #5a0808;border-radius:4px;color:#ff5555;font-size:8px;padding:2px 7px;cursor:pointer;}
+.user-del:hover{border-color:#ff5555;}
+.hist-row-wrap{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+.hist-ciclo{font-size:9px;color:#fff;font-weight:600;min-width:42px;}
+.hist-bar-wrap{flex:1;background:#020c18;border-radius:3px;height:13px;overflow:hidden;}
+.hist-bar{height:100%;background:linear-gradient(90deg,#00b4ff,#00ff88);border-radius:3px;display:flex;align-items:center;padding-left:4px;font-size:7.5px;color:#000;font-weight:700;transition:width 0.6s;}
+.hist-num{font-size:9px;color:#00c8ff;font-weight:700;min-width:28px;text-align:right;}
+.db-upload-area{background:#020c18;border:2px dashed #1a4a6a;border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:8px;}
+.db-upload-area:hover{border-color:#00b4ff;}
+.db-upload-area i{font-size:28px;color:#3a7a9a;display:block;margin-bottom:6px;}
+.db-upload-area span{font-size:10px;color:#5a9abc;}
+.db-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px;}
+.db-stat{background:#030c1a;border:1px solid #0c2a42;border-radius:6px;padding:7px;text-align:center;}
+.db-stat-val{font-size:16px;font-weight:700;color:#00c8ff;font-family:'Orbitron',monospace;}
+.db-stat-lbl{font-size:8px;color:#3a7a9a;text-transform:uppercase;}
+.db-progress{background:#020c18;border-radius:4px;height:8px;margin:6px 0;overflow:hidden;display:none;}
+.db-progress.visible{display:block;}
+.db-progress-bar{height:100%;background:linear-gradient(90deg,#00b4ff,#00ff88);border-radius:4px;transition:width 0.3s;}
+.loading-overlay{position:fixed;inset:0;background:rgba(1,3,6,0.9);z-index:500;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+.loading-overlay.visible{display:flex;}
+.spinner{width:40px;height:40px;border:3px solid #0c2a42;border-top:3px solid #00c8ff;border-radius:50%;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-txt{font-family:'Orbitron',monospace;font-size:10px;color:#00c8ff;letter-spacing:3px;}
+.add-tabs{display:flex;gap:6px;margin-bottom:8px;}
+.add-tab{flex:1;padding:7px;border-radius:6px;border:1px solid #0c2a42;background:#010306;color:#5a9abc;font-size:9px;font-weight:600;cursor:pointer;text-align:center;}
+.add-tab.active{border-color:#00b4ff;color:#00c8ff;background:#040f1e;}
+.qr-btn{background:#010306;border:1px solid #0c2a42;border-radius:8px;padding:8px;cursor:pointer;text-align:center;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:4px;width:100%;}
+.qr-btn:hover{border-color:#00ff88;}
+.qr-btn i{font-size:22px;color:#00ff88;}
+.qr-btn span{font-size:8px;letter-spacing:2px;color:#1a6a3a;text-transform:uppercase;}
+.qr-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:600;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+.qr-overlay.visible{display:flex;}
+.qr-title{font-family:'Orbitron',monospace;font-size:11px;color:#00c8ff;letter-spacing:3px;}
+.qr-video-wrap{position:relative;width:280px;height:280px;border-radius:12px;overflow:hidden;border:2px solid #00c8ff;background:#000;}
+#qr-video{width:100%;height:100%;object-fit:cover;display:block;border-radius:10px;}
+.qr-canvas{display:none;}
+.qr-frame{position:absolute;inset:0;pointer-events:none;}
+.qr-corner{position:absolute;width:24px;height:24px;border-color:#00ff88;border-style:solid;}
+.qr-corner-tl{top:8px;left:8px;border-width:3px 0 0 3px;}.qr-corner-tr{top:8px;right:8px;border-width:3px 3px 0 0;}
+.qr-corner-bl{bottom:8px;left:8px;border-width:0 0 3px 3px;}.qr-corner-br{bottom:8px;right:8px;border-width:0 3px 3px 0;}
+.qr-scan-line{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#00ff88,transparent);animation:scanline 2s linear infinite;}
+@keyframes scanline{0%{top:10%;}100%{top:90%;}}
+.qr-status{font-size:10px;color:#5a9abc;text-align:center;}
+.qr-status.found{color:#00ff88;font-weight:700;}
+.qr-cancel-btn{background:#0a0203;border:1px solid #ff4422;border-radius:7px;color:#ff4422;font-size:10px;font-weight:600;padding:8px 20px;cursor:pointer;font-family:'Exo 2',sans-serif;}
+</style>
+</head>
+<body>
+<div class="loading-overlay" id="loading"><div class="spinner"></div><div class="loading-txt" id="loading-txt">CARGANDO...</div></div>
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Gestión de Trajes Académicos</div>
+    <div class="login-sub">Pontificia Universidad Católica Madre y Maestra</div>
+    <div class="login-title" id="login-title">ACCESO AL SISTEMA</div>
+    <input class="login-input" type="text" id="login-user-field" placeholder="USUARIO" style="display:none;margin-bottom:6px;"/>
+    <input class="login-input" type="password" id="login-pass" placeholder="••••••••••••" maxlength="30"/>
+    <button class="login-btn" onclick="doLogin()" id="login-btn">INGRESAR</button>
+    <div class="login-err" id="login-err">Credenciales incorrectas</div>
+    <div class="login-sep" id="login-sep">— O SELECCIONA OPERADOR —</div>
+    <div class="login-users" id="login-users-list"></div>
+  </div>
+</div>
+<div class="post-screen" id="post-screen">
+  <div class="post-box">
+    <div class="post-icon" id="post-icon">✅</div>
+    <div class="post-title" id="post-title">TRANSACCIÓN COMPLETADA</div>
+    <div class="post-name" id="post-name">—</div>
+    <div class="post-detail" id="post-detail">—</div>
+    <div class="post-cobro" id="post-cobro" style="display:none;"></div>
+    <div class="post-btns">
+      <button class="post-btn-new" onclick="nuevaTransaccion()">↩ NUEVA TRANSACCIÓN</button>
+      <button class="post-btn-out" onclick="cerrarSesionOperador()">⏻ CERRAR SESIÓN</button>
+    </div>
+    <div class="post-operator" id="post-operator"></div>
+  </div>
+</div>
+<div class="app" id="app" style="display:none;">
+  <div class="grid-bg"></div>
+  <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
+  <div class="corner corner-bl"></div><div class="corner corner-br"></div>
+  <div class="header">
+    <div class="header-top">Gestión de Trajes Académicos</div>
+    <div class="header-sub">Pontificia Universidad Católica Madre y Maestra</div>
+  </div>
+  <div class="top-bar">
+    <div class="top-left">
+      <button class="top-btn SUMINISTROS-only" id="btn-cfg" onclick="openModal('cfg')"><i class="ti ti-settings"></i> Config</button>
+      <button class="top-btn SUMINISTROS-only" id="btn-hist" onclick="openModal('hist')"><i class="ti ti-chart-bar"></i> Histórico</button>
+      <button class="top-btn" onclick="openModal('add')"><i class="ti ti-plus"></i> Agregar</button>
+      <div class="operator-badge"><i class="ti ti-user"></i><span id="operator-name">—</span></div>
+    </div>
+    <div class="cycle-info">
+      <span><span class="sdot"></span>Ciclo: <span id="lbl-ciclo">1920</span></span>
+      <span>Grad: <span id="lbl-grad">—</span></span>
+      <span>Mora: <span id="lbl-mora">—</span></span>
+      <span>Módulo: <span id="lbl-mod">DEVOLUCIÓN</span></span>
+      <button class="logout-btn" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+  <div class="mod-tabs">
+    <div class="mod-tab active" id="mt-dev" onclick="setMod('devolucion',this)"><i class="ti ti-arrow-back-up"></i><span>Devolución</span></div>
+    <div class="mod-tab" id="mt-ent" onclick="setMod('entrega',this)"><i class="ti ti-shirt"></i><span>Entregas</span></div>
+    <div class="mod-tab" id="mt-mae" onclick="setMod('maestros',this)"><i class="ti ti-school"></i><span>Maestros</span></div>
+  </div>
+  <div class="sub-tabs" id="sub-tabs">
+    <div class="sub-tab active" id="st-ent" onclick="setSubMod('entrega',this)">📦 Entrega Maestros</div>
+    <div class="sub-tab" id="st-dev" onclick="setSubMod('devolucion',this)">↩ Devolución Maestros</div>
+  </div>
+  <div class="main-area">
+    <div class="fase-teclado" id="fase-teclado">
+      <div class="teclado-container">
+        <div class="display-row">
+          <div class="display-box" onclick="activarInputScanner()" style="cursor:pointer;" title="Clic aquí y usa el lector QR USB">
+            <div class="display-label" id="display-label">ID Estudiante — Matrícula o Emplid</div>
+            <div class="id-display" id="id-display"><span class="id-placeholder">_ _ _ _ _ _ _ _</span></div>
+            <input type="text" id="scanner-input" style="position:absolute;opacity:0;width:1px;height:1px;top:0;left:0;" onkeydown="scannerKeyDown(event)" oninput="scannerInput(event)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+          </div>
+          <button class="clear-btn" onclick="limpiarTodo()"><i class="ti ti-trash"></i><span>LIMPIAR</span></button>
+        </div>
+        <div class="msg-box err" id="msg-notfound">⚠ ID no encontrado</div>
+        <div class="msg-box warn" id="msg-dup"></div>
+        <div class="msg-box info" id="msg-info"></div>
+        <button class="qr-btn" onclick="abrirQR()"><i class="ti ti-qrcode"></i><span>Escanear QR / Cámara</span></button>
+        <div class="keypad-wrap">
+          <div class="keypad-grid">
+            <button class="key-btn" onclick="pk('1')">1</button><button class="key-btn" onclick="pk('2')">2</button><button class="key-btn" onclick="pk('3')">3</button>
+            <button class="key-btn" onclick="pk('4')">4</button><button class="key-btn" onclick="pk('5')">5</button><button class="key-btn" onclick="pk('6')">6</button>
+            <button class="key-btn" onclick="pk('7')">7</button><button class="key-btn" onclick="pk('8')">8</button><button class="key-btn" onclick="pk('9')">9</button>
+            <button class="key-btn key-del" onclick="pk('del')"><i class="ti ti-backspace"></i></button>
+            <button class="key-btn" onclick="pk('0')">0</button>
+            <button class="key-btn key-ok" onclick="pk('ok')">BUSCAR</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="fase-datos" id="fase-datos">
+      <div class="datos-row" id="datos-row">
+        <div class="student-card" id="student-card">
+          <span class="s-badge badge-est" id="s-badge">ESTUDIANTE</span>
+          <div class="s-name" id="s-name">—</div>
+          <div class="sgrid" id="s-grid"></div>
+          <div class="mora-box" id="mora-box">
+            <i class="ti ti-alert-triangle"></i> <strong>MORA ACTIVA</strong><br>
+            Monto: <strong id="mora-amt">$0</strong> | Días hábiles: <span id="mora-days">0</span> | Semana: <span id="mora-sem">1</span>
+          </div>
+          <div class="piezas-panel" id="piezas-panel" style="display:none;">
+            <div class="piezas-title">Toca las piezas que FALTAN</div>
+            <div class="piezas-grid">
+              <div class="pieza-btn ok" id="p-toga" onclick="togglePieza('toga')">
+                <span class="pieza-icon">👘</span><span class="pieza-name">TOGA</span><span class="pieza-precio" id="p-toga-precio">$3,300</span>
+              </div>
+              <div class="pieza-btn ok" id="p-esclavina" onclick="togglePieza('esclavina')">
+                <span class="pieza-icon">🧣</span><span class="pieza-name">ESCLAVINA</span><span class="pieza-precio" id="p-esclavina-precio">$1,920</span>
+              </div>
+              <div class="pieza-btn ok" id="p-borla" onclick="togglePieza('borla')">
+                <span class="pieza-icon">🔶</span><span class="pieza-name">BORLA</span><span class="pieza-precio" id="p-borla-precio">$180</span>
+              </div>
+              <div class="pieza-btn ok" id="p-birrete" onclick="togglePieza('birrete')">
+                <span class="pieza-icon">🎓</span><span class="pieza-name">BIRRETE</span><span class="pieza-precio" id="p-birrete-precio">$600</span>
+              </div>
+            </div>
+            <div class="cobro-box" id="cobro-box"></div>
+          </div>
+        </div>
+        <div class="sign-panel" id="sign-panel" style="display:none;">
+          <div class="sign-lbl">Firma del <span id="sign-who">Estudiante</span></div>
+          <div class="sign-wrap"><canvas class="sign-canvas" id="sign-canvas"></canvas></div>
+          <div class="sign-actions">
+            <button class="sign-btn sign-clr" onclick="clearSign()"><i class="ti ti-eraser"></i> Borrar</button>
+            <button class="sign-btn sign-acc" onclick="acceptSign()"><i class="ti ti-check"></i> Aceptar</button>
+          </div>
+          <div class="sign-status" id="sign-status">Dibuje su firma arriba</div>
+        </div>
+      </div>
+      <div class="bottom-row">
+        <button class="back-btn" onclick="limpiarTodo()"><i class="ti ti-arrow-left"></i> Volver</button>
+        <button class="final-btn" onclick="finalizar()">✓ FINALIZAR E IMPRIMIR</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- MODAL CONFIGURACIÓN -->
+<div class="overlay" id="modal-cfg">
+  <div class="modal modal-lg">
+    <div class="modal-title">⚙ CONFIGURACIÓN DEL SISTEMA v3.0</div>
+    <div class="mtabs">
+      <div class="mtab active" onclick="switchMTab('inv',this)">📦 Inventario</div>
+      <div class="mtab" onclick="switchMTab('db',this)">📁 Base de Datos</div>
+      <div class="mtab" onclick="switchMTab('ciclo',this)">📊 Ciclo</div>
+      <div class="mtab" onclick="switchMTab('rep',this)">📤 Reportes</div>
+      <div class="mtab" onclick="switchMTab('users',this)">👥 Usuarios</div>
+      <div class="mtab" onclick="switchMTab('ajustes',this)">🔧 Ajustes</div>
+    </div>
+    <div class="msec active" id="ms-inv">
+      <div class="inv-wrap"><table class="inv-table" id="inv-table-el"><thead><tr><th class="color-col">Color</th><th title="Técnico Superior">0</th><th title="Grado Raya I">1</th><th title="Maestría Raya II">2</th><th title="Doctorado Estudiante">3E</th><th title="Doctorado Maestro">3M</th></tr></thead><tbody id="inv-tbody"></tbody></table></div>
+      <div style="font-size:8px;color:#3a7a9a;margin-top:4px;">0=Técnico | 1=Grado | 2=Maestría | 3E=Doc.Estudiante | 3M=Doc.Maestro</div>
+      <div class="modal-btns"><button class="mbtn-cancel" onclick="closeModal('cfg')">Cerrar</button><button class="mbtn-save" onclick="guardarInventarioDB()">💾 Guardar en Firebase</button></div>
+    </div>
+    <div class="msec" id="ms-db">
+      <div class="db-stats">
+        <div class="db-stat"><div class="db-stat-val" id="db-est-count">0</div><div class="db-stat-lbl">Estudiantes</div></div>
+        <div class="db-stat"><div class="db-stat-val" id="db-mae-count">0</div><div class="db-stat-lbl">Maestros</div></div>
+        <div class="db-stat"><div class="db-stat-val" id="db-reg-count">0</div><div class="db-stat-lbl">Registros</div></div>
+      </div>
+      <div style="background:#030c1a;border:1px solid #0c2a42;border-radius:7px;padding:8px;margin-bottom:7px;">
+        <div style="font-size:8px;color:#3a7a9a;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">📋 Descargar plantillas de ejemplo</div>
+        <div style="display:flex;gap:6px;">
+          <button class="mbtn-dl" style="flex:1;padding:8px;display:flex;flex-direction:column;align-items:center;gap:3px;" onclick="descargarPlantillaEstudiantes()"><i class="ti ti-file-spreadsheet" style="font-size:18px;display:block;"></i><span>Plantilla Estudiantes</span><small style="font-size:7px;opacity:0.7;">.xlsx</small></button>
+          <button class="mbtn-dl" style="flex:1;padding:8px;display:flex;flex-direction:column;align-items:center;gap:3px;border-color:#cc88ff;color:#cc88ff;" onclick="descargarPlantillaMaestros()"><i class="ti ti-file-spreadsheet" style="font-size:18px;display:block;"></i><span>Plantilla Maestros</span><small style="font-size:7px;opacity:0.7;">.xlsx</small></button>
+        </div>
+      </div>
+      <div class="db-upload-area" onclick="document.getElementById('file-upload').click()"><i class="ti ti-file-spreadsheet"></i><span>Clic para subir Excel de estudiantes<br><small style="font-size:8px;color:#1a4a6a;">Usar plantilla de arriba</small></span><input type="file" id="file-upload" accept=".xlsx,.xls" style="display:none" onchange="subirExcel(event)"/></div>
+      <div class="db-upload-area" onclick="document.getElementById('file-upload-mae').click()" style="margin-bottom:0;"><i class="ti ti-file-spreadsheet" style="color:#cc88ff;"></i><span style="color:#cc88ff;">Clic para subir Excel de maestros<br><small style="font-size:8px;color:#4a2a6a;">Usar plantilla de arriba</small></span><input type="file" id="file-upload-mae" accept=".xlsx,.xls" style="display:none" onchange="subirExcelMaestros(event)"/></div>
+      <div class="db-progress" id="db-progress"><div class="db-progress-bar" id="db-progress-bar" style="width:0%"></div></div>
+      <div style="background:#021506;border:1px solid #0a3a14;border-radius:7px;padding:8px;margin-top:8px;">
+        <div style="font-size:8px;color:#5aaa2a;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">📦 Carga masiva — Entregas ya realizadas</div>
+        <div style="font-size:8px;color:#3a7a5a;line-height:1.6;margin-bottom:6px;">Sube un Excel con los IDs de estudiantes ya entregados.<br><b style="color:#00ff88;">Columna A = ID</b> (matrícula o emplid, desde fila 1)</div>
+        <div style="display:flex;gap:6px;">
+          <button class="mbtn-dl" style="flex:1;border-color:#00ff88;color:#00ff88;font-size:8px;" onclick="descargarPlantillaEntregados()">📋 Plantilla</button>
+          <button class="mbtn-dl" style="flex:1;border-color:#00ff88;color:#00ff88;font-size:8px;" onclick="document.getElementById('file-entregados').click()">📤 Subir Excel</button>
+          <input type="file" id="file-entregados" accept=".xlsx,.xls" style="display:none" onchange="subirEntregados(event)"/>
+        </div>
+        <div class="db-progress" id="db-progress-ent" style="margin-top:5px;"><div class="db-progress-bar" id="db-progress-bar-ent" style="width:0%;background:#00ff88;"></div></div>
+      </div>
+      <div class="modal-btns" style="margin-top:8px;"><button class="mbtn-cancel" onclick="closeModal('cfg')">Cerrar</button><button class="mbtn-dl" onclick="consultarDB()">🔍 Consultar DB</button><button class="mbtn-danger" onclick="borrarSoloRegistros()">🗑 Borrar Registros</button><button class="mbtn-danger" onclick="eliminarDB()">🗑 Eliminar DB</button></div>
+      <div class="modal-btns" style="margin-top:6px;"><button class="mbtn-danger" style="flex:1;background:#0a0000;border-color:#ff0000;font-size:9px;padding:9px;font-weight:700;letter-spacing:1px;" onclick="reiniciarDB()">⚠ REINICIAR BASE DE DATOS COMPLETA</button></div>
+    </div>
+    <div class="msec" id="ms-ciclo">
+      <div class="stat-card">
+        <div class="stat-title">Resumen Ciclo <span id="st-ciclo-num">1920</span></div>
+        <div class="stat-row"><span class="stat-label">Total estudiantes</span><div class="stat-bar-wrap"><div class="stat-bar" style="width:100%;background:#00b4ff"></div></div><span class="stat-val" id="st-total">0</span></div>
+        <div class="stat-row"><span class="stat-label">Entregas realizadas</span><div class="stat-bar-wrap"><div class="stat-bar" id="bar-ent" style="width:0%;background:#00ff88"></div></div><span class="stat-val" id="st-ent">0</span></div>
+        <div class="stat-row"><span class="stat-label">Devoluciones</span><div class="stat-bar-wrap"><div class="stat-bar" id="bar-dev" style="width:0%;background:#00b4ff"></div></div><span class="stat-val" id="st-dev">0</span></div>
+        <div class="stat-row"><span class="stat-label">Pendientes entrega</span><div class="stat-bar-wrap"><div class="stat-bar" id="bar-pend" style="width:0%;background:#ffaa00"></div></div><span class="stat-val" id="st-pend">0</span></div>
+        <div class="stat-row"><span class="stat-label">Con mora/cobro</span><div class="stat-bar-wrap"><div class="stat-bar" id="bar-mora" style="width:0%;background:#ff5555"></div></div><span class="stat-val" id="st-mora">0</span></div>
+      </div>
+      <div class="modal-btns"><button class="mbtn-cancel" onclick="closeModal('cfg')">Cerrar</button><button class="mbtn-danger" onclick="cierreCiclo()">⚠ Cierre de Ciclo</button></div>
+      <div class="modal-btns" style="margin-top:6px;"><button class="mbtn-save" style="flex:1;font-size:9px;padding:9px;" onclick="reiniciarCiclo()">🔄 REINICIAR CICLO</button></div>
+      <div style="font-size:8px;color:#3a7a9a;margin-top:5px;line-height:1.5;padding:0 2px;">ⓘ <b>Reiniciar Ciclo</b> borra todos los registros de entrega/devolución del ciclo actual y te permite ingresar el nuevo número de ciclo. Los datos de estudiantes y maestros se conservan.</div>
+    </div>
+    <div class="msec" id="ms-rep">
+      <div style="background:#030c1a;border:1px solid #0c2a42;border-radius:7px;padding:10px;margin-bottom:8px;">
+        <div style="font-size:8px;color:#3a7a9a;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">📅 Reporte por rango de fechas</div>
+        <div class="form-grid2"><div class="form-group"><label class="form-label">Desde</label><input class="form-input" type="date" id="rep-desde"/></div><div class="form-group"><label class="form-label">Hasta</label><input class="form-input" type="date" id="rep-hasta"/></div></div>
+        <div class="form-group"><label class="form-label">Acción</label><select class="form-select" id="rep-accion"><option value="todas">Todas (entregas y devoluciones)</option><option value="devolucion">Solo devoluciones</option><option value="entrega">Solo entregas</option></select></div>
+        <div style="display:flex;gap:6px;"><button class="mbtn-dl" style="flex:1;" onclick="setReporteHoy()">📆 Hoy</button><button class="mbtn-save" style="flex:2;" onclick="descargarReporteFechas()">📥 Descargar rango</button></div>
+      </div>
+      <div class="rep-btn-grid">
+        <div class="rep-btn" onclick="descargarReporte('faltantes-entrega-est')"><i class="ti ti-users"></i><span>Faltantes por Entrega</span><small>Estudiantes</small></div>
+        <div class="rep-btn" onclick="descargarReporte('faltantes-dev-est')"><i class="ti ti-user-x"></i><span>Faltantes por Devolución</span><small>Estudiantes</small></div>
+        <div class="rep-btn" onclick="descargarReporte('faltantes-entrega-mae')"><i class="ti ti-school"></i><span>Faltantes por Entrega</span><small>Maestros</small></div>
+        <div class="rep-btn" onclick="descargarReporte('faltantes-dev-mae')"><i class="ti ti-school-off"></i><span>Faltantes por Devolución</span><small>Maestros</small></div>
+      </div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;">
+        <button class="mbtn-dl" onclick="descargarReporte('CSTI')">📥 CSTI</button><button class="mbtn-dl" onclick="descargarReporte('CVIR')">📥 CVIR</button><button class="mbtn-dl" onclick="descargarReporte('CSTA')">📥 CSTA</button><button class="mbtn-dl" onclick="descargarReporte('maestros')">📥 Maestros</button><button class="mbtn-dl" onclick="descargarReporte('todo')">📥 Completo</button>
+      </div>
+      <button class="mbtn-save" style="width:100%;margin-top:6px;" onclick="sincronizarGoogleSheets()">🔄 Sincronizar Google Sheets (CSTI/CVIR + Inventario)</button>
+      <div class="modal-btns"><button class="mbtn-cancel" onclick="closeModal('cfg')">Cerrar</button></div>
+    </div>
+    <div class="msec" id="ms-users">
+      <div class="user-list" id="user-list"></div>
+      <div style="background:#030c1a;border:1px solid #0c2a42;border-radius:7px;padding:10px;">
+        <div style="font-size:9px;color:#3a7a9a;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Agregar Operador</div>
+        <div class="form-grid2"><div class="form-group"><label class="form-label">Nombre</label><input class="form-input" id="new-user-name" placeholder="Nombre del operador"/></div><div class="form-group"><label class="form-label">Contraseña</label><input class="form-input" type="password" id="new-user-pass" placeholder="Contraseña"/></div></div>
+        <button class="mbtn-save" style="width:100%;" onclick="agregarUsuario()">AGREGAR OPERADOR</button>
+      </div>
+      <div class="modal-btns"><button class="mbtn-cancel" onclick="closeModal('cfg')">Cerrar</button></div>
+    </div>
+    <!-- AJUSTES v3.0 con tabla de precios y moras -->
+    <div class="msec" id="ms-ajustes">
+      <div class="form-grid2">
+        <div class="form-group"><label class="form-label">Ciclo actual</label><input class="form-input" id="cfg-ciclo" value="1920"/></div>
+        <div class="form-group"><label class="form-label">Fecha de graduación</label><input class="form-input" type="date" id="cfg-grad" value="2026-11-05"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Correo cobros <span style="color:#3a7a9a;font-size:7px;">(separar varios con coma)</span></label><input class="form-input" id="cfg-cobros" placeholder="correo@pucmm.edu.do, otro@pucmm.edu.do"/></div>
+      <div style="font-size:8px;color:#3a7a9a;margin-bottom:4px;">⚠ Puedes poner varios correos separados por coma en cada campo</div>
+      <div class="form-grid3">
+        <div class="form-group"><label class="form-label">Correo CSTI</label><input class="form-input" id="cfg-csti" placeholder="csti@pucmm.edu.do"/></div>
+        <div class="form-group"><label class="form-label">Correo CVIR</label><input class="form-input" id="cfg-cvir" placeholder="cvir@pucmm.edu.do"/></div>
+        <div class="form-group"><label class="form-label">Correo CSTA</label><input class="form-input" id="cfg-csta" placeholder="csta@pucmm.edu.do"/></div>
+      </div>
+      <!-- ═══ TABLA DE PRECIOS EDITABLE v3.0 ═══ -->
+      <div style="background:#030c1a;border:1px solid #0c2a42;border-radius:7px;padding:10px;margin-top:10px;margin-bottom:10px;">
+        <div style="font-size:9px;color:#3a7a9a;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">💰 Tabla de Precios de Piezas del Traje</div>
+        <div class="inv-wrap" style="margin-bottom:10px;">
+          <table class="inv-table">
+            <thead><tr><th>Pieza</th><th style="width:120px;">Precio (RD$)</th></tr></thead>
+            <tbody>
+              <tr><td style="text-align:left;"><strong>Toga</strong></td><td><input type="number" id="precio-toga" min="0" step="10" style="background:#030c1a;border:1px solid #1a4a6a;border-radius:3px;color:#d0e8f8;font-size:9px;padding:4px 6px;width:100px;text-align:right;font-weight:bold;" onchange="actualizarTotalTrajeDisplay()"/></td></tr>
+              <tr><td style="text-align:left;"><strong>Esclavina</strong></td><td><input type="number" id="precio-esclavina" min="0" step="10" style="background:#030c1a;border:1px solid #1a4a6a;border-radius:3px;color:#d0e8f8;font-size:9px;padding:4px 6px;width:100px;text-align:right;font-weight:bold;" onchange="actualizarTotalTrajeDisplay()"/></td></tr>
+              <tr><td style="text-align:left;"><strong>Borla</strong></td><td><input type="number" id="precio-borla" min="0" step="10" style="background:#030c1a;border:1px solid #1a4a6a;border-radius:3px;color:#d0e8f8;font-size:9px;padding:4px 6px;width:100px;text-align:right;font-weight:bold;" onchange="actualizarTotalTrajeDisplay()"/></td></tr>
+              <tr><td style="text-align:left;"><strong>Birrete</strong></td><td><input type="number" id="precio-birrete" min="0" step="10" style="background:#030c1a;border:1px solid #1a4a6a;border-radius:3px;color:#d0e8f8;font-size:9px;padding:4px 6px;width:100px;text-align:right;font-weight:bold;" onchange="actualizarTotalTrajeDisplay()"/></td></tr>
+              <tr style="background:#020706;border-top:2px solid #0c2a42;"><td style="text-align:left;"><strong style="color:#00ff88;">TOTAL TRAJE</strong></td><td><strong style="color:#00ff88;font-size:10px;" id="total-traje-display">RD$6,000</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="font-size:8px;color:#00b4ff;margin-bottom:8px;">ℹ El total se calcula automáticamente. Se usa como tope de cobro en devoluciones.</div>
+        <!-- TABLA DE MORAS POR DÍAS -->
+        <div style="font-size:9px;color:#3a7a9a;text-transform:uppercase;letter-spacing:1px;margin-top:10px;margin-bottom:8px;">⏰ Tabla de Moras por Días de Retraso</div>
+        <div class="inv-wrap">
+          <table class="inv-table" style="font-size:8.5px;">
+            <thead><tr><th>Rango de Días</th><th style="width:110px;">Monto por Día (RD$)</th><th>Ejemplo</th></tr></thead>
+            <tbody>
+              <tr><td style="text-align:left;"><strong>8 a 14 días</strong></td><td><input type="number" id="mora-8-14" min="0" step="10" style="background:#030c1a;border:1px solid #1a4a6a;border-radius:3px;color:#d0e8f8;font-size:9px;padding:3px 5px;width:90px;text-align:right;font-weight:bold;"/></td><td style="font-size:7.5px;color:#5a9abc;">10 días × RD$ por día</td></tr>
+              <tr><td style="text-align:left;"><strong>15 a 20 días</strong></td><td><input type="number" id="mora-15-20" min="0" step="10" style="background:#030c1a;border:1px solid #1a4a6a;border-radius:3px;color:#d0e8f8;font-size:9px;padding:3px 5px;width:90px;text-align:right;font-weight:bold;"/></td><td style="font-size:7.5px;color:#5a9abc;">18 días × RD$ por día</td></tr>
+              <tr><td style="text-align:left;"><strong>21 a 30 días</strong></td><td><input type="number" id="mora-21-30" min="0" step="10" style="background:#030c1a;border:1px solid #1a4a6a;border-radius:3px;color:#d0e8f8;font-size:9px;padding:3px 5px;width:90px;text-align:right;font-weight:bold;"/></td><td style="font-size:7.5px;color:#5a9abc;">25 días × RD$ por día</td></tr>
+              <tr style="background:#0a0203;border-top:2px solid #5a0a0a;"><td style="text-align:left;"><strong style="color:#ff5555;">31+ días o Pérdida</strong></td><td colspan="2"><strong style="color:#ff5555;">Se cobra el TOPE del traje (RD$6,000 ó RD$30,000 doctorado)</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="font-size:7.5px;color:#5a9abc;margin-top:8px;line-height:1.6;">ℹ<b> Cálculo de mora:</b> Se multiplican los días hábiles por el monto del rango correspondiente. Si excede el tope del traje, se cobra solo el tope.</div>
+      </div>
+      <!-- CAMBIAR CONTRASEÑA -->
+      <div style="background:#030c1a;border:1px solid #0c2a42;border-radius:7px;padding:10px;margin-top:4px;">
+        <div style="font-size:9px;color:#3a7a9a;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Cambiar Contraseña SUMINISTROS</div>
+        <div class="form-grid2">
+          <div class="form-group"><label class="form-label">Nueva contraseña</label><input class="form-input" type="password" id="new-SUMINISTROS-pass" placeholder="Nueva contraseña"/></div>
+          <div class="form-group"><label class="form-label">Confirmar</label><input class="form-input" type="password" id="confirm-SUMINISTROS-pass" placeholder="Confirmar"/></div>
+        </div>
+        <button class="mbtn-danger" style="width:100%;" onclick="cambiarPasswordSUMINISTROS()">CAMBIAR CONTRASEÑA SUMINISTROS</button>
+      </div>
+      <div class="modal-btns" style="margin-top:10px;"><button class="mbtn-cancel" onclick="closeModal('cfg')">Cancelar</button><button class="mbtn-save" onclick="guardarConfig()">💾 GUARDAR CONFIG</button></div>
+    </div>
+  </div>
+</div>
+<!-- MODAL HISTÓRICO -->
+<div class="overlay" id="modal-hist">
+  <div class="modal modal-lg">
+    <div class="modal-title">📈 HISTÓRICO DE CICLOS</div>
+    <div class="stat-card"><div class="stat-title">Entregas por ciclo</div><div id="hist-bars"></div></div>
+    <div class="stat-card"><div class="stat-title">Ciclo con más entregas</div><div style="font-size:14px;font-weight:700;color:#00ff88;text-align:center;padding:6px 0;" id="best-ciclo">—</div></div>
+    <div class="stat-card"><div class="stat-title">Detalle por ciclo</div><table class="inv-table"><thead><tr><th>Ciclo</th><th>Total</th><th>Entregados</th><th>Devueltos</th><th>Pendientes</th><th>Mora</th></tr></thead><tbody id="hist-table"></tbody></table></div>
+    <div class="modal-btns"><button class="mbtn-cancel" onclick="closeModal('hist')">Cerrar</button><button class="mbtn-dl" onclick="descargarReporte('historico')">📥 Exportar</button></div>
+  </div>
+</div>
+<!-- MODAL AGREGAR -->
+<div class="overlay" id="modal-add">
+  <div class="modal">
+    <div class="modal-title">+ AGREGAR REGISTRO MANUAL</div>
+    <div class="add-tabs"><div class="add-tab active" id="at-est" onclick="switchAddTab('est',this)">Estudiante</div><div class="add-tab" id="at-mae" onclick="switchAddTab('mae',this)">Maestro</div></div>
+    <div id="af-est">
+      <div class="form-grid2"><div class="form-group"><label class="form-label">Matrícula</label><input class="form-input" id="f-mat"/></div><div class="form-group"><label class="form-label">Emplid</label><input class="form-input" id="f-emp"/></div></div>
+      <div class="form-group"><label class="form-label">Nombre completo</label><input class="form-input" id="f-nom"/></div>
+      <div class="form-grid2"><div class="form-group"><label class="form-label">Campus</label><select class="form-select" id="f-cam"><option>CSTI</option><option>CVIR</option><option>CSTA</option></select></div><div class="form-group"><label class="form-label">Facultad</label><select class="form-select" id="f-fac"><option>FCSA</option><option>FCS</option><option>FCI</option><option>FCH</option></select></div></div>
+      <div class="form-group"><label class="form-label">Programa / Carrera</label><input class="form-input" id="f-prog"/></div>
+      <div class="form-grid2"><div class="form-group"><label class="form-label">Color</label><select class="form-select" id="f-col"><option>AMARILLO ORO</option><option>AMARILLO CLARO</option><option>AZUL OSCURO</option><option>AZUL CIELO</option><option>ROJO</option><option>NEGRO</option></select></div><div class="form-group"><label class="form-label">Raya</label><select class="form-select" id="f-ray"><option value="0">0 — Sin raya</option><option value="I">I — Grado</option><option value="II">II — Maestría</option><option value="ESPECIAL">ESPECIAL — Doc.Est</option></select></div></div>
+      <div class="form-grid2"><div class="form-group"><label class="form-label">Celular</label><input class="form-input" id="f-cel"/></div><div class="form-group"><label class="form-label">Correo</label><input class="form-input" id="f-mail"/></div></div>
+    </div>
+    <div id="af-mae" style="display:none;">
+      <div class="form-group"><label class="form-label">Nombre completo</label><input class="form-input" id="m-nom"/></div>
+      <div class="form-group"><label class="form-label">Cédula</label><input class="form-input" id="m-ced"/></div>
+      <div class="form-grid2"><div class="form-group"><label class="form-label">Color</label><select class="form-select" id="m-col"><option>AMARILLO ORO</option><option>AMARILLO CLARO</option><option>AZUL OSCURO</option><option>AZUL CIELO</option><option>ROJO</option></select></div><div class="form-group"><label class="form-label">Raya</label><select class="form-select" id="m-ray"><option value="II">II — Maestría</option><option value="III">III — Doctorado Maestro</option></select></div></div>
+      <div class="form-grid2"><div class="form-group"><label class="form-label">Campus</label><select class="form-select" id="m-cam"><option>CSTI</option><option>CVIR</option><option>CSTA</option></select></div><div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="m-tel"/></div></div>
+      <div class="form-group"><label class="form-label">Correo</label><input class="form-input" id="m-mail"/></div>
+    </div>
+    <div class="modal-btns"><button class="mbtn-cancel" onclick="closeModal('add')">Cancelar</button><button class="mbtn-save" onclick="guardarManual()">GUARDAR EN FIREBASE</button></div>
+  </div>
+</div>
+<!-- QR OVERLAY -->
+<div class="qr-overlay" id="qr-overlay">
+  <div class="qr-title">ESCÁNER QR</div>
+  <div class="qr-video-wrap">
+    <video id="qr-video" autoplay playsinline></video>
+    <div class="qr-frame">
+      <div class="qr-corner qr-corner-tl"></div><div class="qr-corner qr-corner-tr"></div>
+      <div class="qr-corner qr-corner-bl"></div><div class="qr-corner qr-corner-br"></div>
+      <div class="qr-scan-line"></div>
+    </div>
+  </div>
+  <div class="qr-status" id="qr-status">Apunta la cámara al código QR</div>
+  <button class="qr-cancel-btn" onclick="cerrarQR()">✕ Cancelar</button>
+</div>
+<script>
+// ══════════════════════════════════════════════
+//  FIREBASE
+// ══════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyCJ5CaXfBiAbTK67NTmFvBo3YUhf4VZChM",
+  authDomain: "togas-pucmm.firebaseapp.com",
+  projectId: "togas-pucmm",
+  storageBucket: "togas-pucmm.firebasestorage.app",
+  messagingSenderId: "422706867516",
+  appId: "1:422706867516:web:cccbf665c695f6a8dc8239"
+};
+if(typeof firebase === 'undefined'){
+  document.body.innerHTML = '<div style="color:white;font-family:Arial;padding:40px;text-align:center;background:#010306;height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;"><h2 style="color:#00c8ff;">Error de conexión</h2><p>Recarga la página para continuar.</p><button onclick="location.reload()" style="background:#020d06;border:2px solid #00ff88;border-radius:8px;padding:12px 24px;color:#00ff88;font-size:14px;cursor:pointer;">↻ RECARGAR</button></div>';
+  throw new Error('Firebase no cargó');
+}
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+// ══════════════════════════════════════════════
+//  CONFIG PRECIOS v3.0
+// ══════════════════════════════════════════════
+let PRECIOS = {
+  piezas: { toga: 3300, esclavina: 1920, borla: 180, birrete: 600 },
+  moras: { dias_8_14: 100, dias_15_20: 150, dias_21_30: 200 }
+};
+
+function calcularTotalTraje() {
+  return PRECIOS.piezas.toga + PRECIOS.piezas.esclavina + PRECIOS.piezas.borla + PRECIOS.piezas.birrete;
+}
+
+function actualizarTotalTrajeDisplay() {
+  const toga = parseInt(document.getElementById('precio-toga').value)||0;
+  const esclavina = parseInt(document.getElementById('precio-esclavina').value)||0;
+  const borla = parseInt(document.getElementById('precio-borla').value)||0;
+  const birrete = parseInt(document.getElementById('precio-birrete').value)||0;
+  const total = toga + esclavina + borla + birrete;
+  const elem = document.getElementById('total-traje-display');
+  if(elem) elem.textContent = 'RD$' + total.toLocaleString('es-DO');
+}
+
+async function cargarPrecios() {
+  try {
+    const doc = await db.collection('config').doc('precios').get();
+    if (doc.exists) {
+      const data = doc.data();
+      if (data.piezas) PRECIOS.piezas = data.piezas;
+      if (data.moras) PRECIOS.moras = data.moras;
+    }
+    renderizarPreciosEnUI();
+  } catch (e) { console.log('Error cargando precios:', e); }
+}
+
+function renderizarPreciosEnUI() {
+  document.getElementById('precio-toga').value = PRECIOS.piezas.toga;
+  document.getElementById('precio-esclavina').value = PRECIOS.piezas.esclavina;
+  document.getElementById('precio-borla').value = PRECIOS.piezas.borla;
+  document.getElementById('precio-birrete').value = PRECIOS.piezas.birrete;
+  document.getElementById('mora-8-14').value = PRECIOS.moras.dias_8_14;
+  document.getElementById('mora-15-20').value = PRECIOS.moras.dias_15_20;
+  document.getElementById('mora-21-30').value = PRECIOS.moras.dias_21_30;
+  const total = calcularTotalTraje();
+  const elem = document.getElementById('total-traje-display');
+  if(elem) elem.textContent = 'RD$' + total.toLocaleString('es-DO');
+  actualizarPreciosPiezasUI();
+}
+
+function actualizarPreciosPiezasUI() {
+  ['toga', 'esclavina', 'borla', 'birrete'].forEach(id => {
+    const elem = document.getElementById('p-' + id + '-precio');
+    if (elem) elem.textContent = '$' + PRECIOS.piezas[id].toLocaleString('es-DO');
+  });
+}
+
+// ══════════════════════════════════════════════
+//  ESTADO GLOBAL
+// ══════════════════════════════════════════════
+let CONFIG = {
+  ciclo:"1920", gradDate:new Date("2026-11-05"),
+  correos:{
+    CSTI:"GABRIELFERRERAS@PUCMM.EDU.DO, EPERALTA@PUCMM.EDU.DO, KGOMEZ@PUCMM.EDU.DO, GENRRISEUGENIA@PUCMM.EDU.DO, RANDYSANCHEZ@PUCMM.EDU.DO",
+    CVIR:"GABRIELFERRERAS@PUCMM.EDU.DO, EPERALTA@PUCMM.EDU.DO, KGOMEZ@PUCMM.EDU.DO, GENRRISEUGENIA@PUCMM.EDU.DO, RANDYSANCHEZ@PUCMM.EDU.DO",
+    CSTA:"RANDYSANCHEZ@PUCMM.EDU.DO, GENRRISEUGENIA@PUCMM.EDU.DO",
+    cobros:"CUENTAESTUDIANTIL-CSD@PUCMM.EDU.DO, RANDYSANCHEZ@PUCMM.EDU.DO, GENRRISEUGENIA@PUCMM.EDU.DO"
+  }
+};
+let CURRENT_USER = null;
+let OPERADORES = [];
+let cid='', cmod='devolucion', submod='entrega', signed=false;
+let drawing=false, lastX=0, lastY=0, ctx, currentStudent=null, addTab='est';
+const piezas = {toga:true, esclavina:true, borla:true, birrete:true};
+let lastTransaccion = null;
+
+const COLORES = ['AMARILLO ORO','AMARILLO CLARO','AZUL CIELO','AZUL OSCURO','ROJO'];
+let INVENTARIO = {};
+COLORES.forEach(c => { INVENTARIO[c] = {col0:0, col1:0, col2:0, col3E:0, col3M:0}; });
+INVENTARIO['NEGRO'] = {col0:0, col1:0, col2:0, col3E:0, col3M:0};
+
+// ══════════════════════════════════════════════
+//  MORA v3.0 — RANGOS DE DÍAS
+// ══════════════════════════════════════════════
+function getMoraStart(g){
+  let d=new Date(g); d.setDate(d.getDate()+7);
+  while(d.getDay()!==1) d.setDate(d.getDate()+1);
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+function calcMora(raya){
+  const today=new Date(); today.setHours(0,0,0,0);
+  const ms=getMoraStart(CONFIG.gradDate);
+  if(today<ms) return{monto:0,dias:0,semana:0};
+  let dias=0,d=new Date(ms);
+  while(d<=today){if(d.getDay()>=1&&d.getDay()<=5)dias++;d.setDate(d.getDate()+1);}
+  let mora=0;
+  if(dias>=8&&dias<=14){ mora=dias*PRECIOS.moras.dias_8_14; }
+  else if(dias>=15&&dias<=20){ mora=dias*PRECIOS.moras.dias_15_20; }
+  else if(dias>=21&&dias<=30){ mora=dias*PRECIOS.moras.dias_21_30; }
+  else if(dias>=31){ mora=(raya==='ESPECIAL'||raya==='III')?30000:calcularTotalTraje(); }
+  const tope=(raya==='ESPECIAL'||raya==='III')?30000:calcularTotalTraje();
+  return{monto:Math.min(mora,tope),dias,semana:Math.ceil(dias/5)||1};
+}
+
+// ══════════════════════════════════════════════
+//  LOGIN
+// ══════════════════════════════════════════════
+const SUMINISTROS_EMAIL = "admin@togas.com";
+
+auth.onAuthStateChanged(user => {
+  if(user){
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('app').style.display='flex';
+    CURRENT_USER = {name:'SUMINISTROS', isSUMINISTROS:true};
+    document.getElementById('operator-name').textContent='SUMINISTROS';
+    initApp();
+  }
+});
+
+function renderLoginUsers(){
+  const list=document.getElementById('login-users-list');
+  const sep=document.getElementById('login-sep');
+  if(!OPERADORES.length){list.innerHTML='';sep.style.display='none';return;}
+  sep.style.display='block';
+  list.innerHTML=OPERADORES.map(u=>`<div class="login-user-btn" onclick="selectOperador('${u.name}')"><i class="ti ti-user"></i>${u.name}</div>`).join('');
+}
+
+let selectedOperador = null;
+function selectOperador(name){
+  selectedOperador = name;
+  document.getElementById('login-title').textContent = name.toUpperCase();
+  document.getElementById('login-user-field').style.display='none';
+  document.getElementById('login-pass').placeholder='••••••••••••';
+  document.getElementById('login-pass').value='';
+  document.getElementById('login-pass').focus();
+  document.getElementById('login-users-list').style.display='none';
+  document.getElementById('login-sep').style.display='none';
+}
+
+async function doLogin(){
+  const pass=document.getElementById('login-pass').value.trim();
+  if(!pass) return;
+  document.getElementById('login-err').classList.remove('visible');
+  if(selectedOperador){
+    const op=OPERADORES.find(u=>u.name===selectedOperador);
+    if(op && btoa(pass)===op.passHash){
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('app').style.display='flex';
+      CURRENT_USER={name:selectedOperador,isSUMINISTROS:op.isSUMINISTROS||false};
+      document.getElementById('operator-name').textContent=selectedOperador;
+      if(op.isSUMINISTROS){document.getElementById('btn-cfg').style.display='flex';document.getElementById('btn-hist').style.display='flex';}
+      else{document.getElementById('btn-cfg').style.display='none';document.getElementById('btn-hist').style.display='none';}
+      initApp();
+    } else {
+      document.getElementById('login-err').classList.add('visible');
+      document.getElementById('login-pass').value='';
+    }
+    return;
+  }
+  showLoading("VERIFICANDO...");
+  try{
+    await auth.signInWithEmailAndPassword(SUMINISTROS_EMAIL, pass);
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('app').style.display='flex';
+    CURRENT_USER={name:'SUMINISTROS',isSUMINISTROS:true};
+    document.getElementById('operator-name').textContent='SUMINISTROS';
+    document.getElementById('btn-cfg').style.display='flex';
+    document.getElementById('btn-hist').style.display='flex';
+    hideLoading(); initApp();
+  }catch(e){
+    hideLoading();
+    document.getElementById('login-err').classList.add('visible');
+    document.getElementById('login-pass').value='';
+  }
+}
+document.getElementById('login-pass').addEventListener('keypress',e=>{if(e.key==='Enter')doLogin();});
+
+async function doLogout(){
+  if(CURRENT_USER&&CURRENT_USER.isSUMINISTROS) await auth.signOut();
+  resetLoginScreen();
+}
+function cerrarSesionOperador(){
+  document.getElementById('post-screen').classList.remove('visible');
+  resetLoginScreen();
+}
+function resetLoginScreen(){
+  CURRENT_USER=null; selectedOperador=null;
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-pass').value='';
+  document.getElementById('login-err').classList.remove('visible');
+  document.getElementById('login-title').textContent='ACCESO AL SISTEMA';
+  document.getElementById('login-users-list').style.display='flex';
+  document.getElementById('login-sep').style.display='block';
+  limpiarTodo(); renderLoginUsers();
+}
+
+// ══════════════════════════════════════════════
+//  POST-TRANSACCIÓN
+// ══════════════════════════════════════════════
+function mostrarPostTransaccion(accion, s, totalCobro, mora, cobroPiezas){
+  lastTransaccion={accion,s,totalCobro,mora,cobroPiezas};
+  document.getElementById('post-icon').textContent = totalCobro>0?'⚠️':'✅';
+  document.getElementById('post-title').textContent = accion==='entrega'?'ENTREGA COMPLETADA':'DEVOLUCIÓN COMPLETADA';
+  document.getElementById('post-name').textContent = s.nombre;
+  document.getElementById('post-detail').textContent = `${s.color||'—'} | ${rayaLabel(s.raya)} | Ciclo ${CONFIG.ciclo}`;
+  document.getElementById('post-operator').textContent = `Operador: ${CURRENT_USER?.name||'—'}`;
+  const pc=document.getElementById('post-cobro');
+  if(totalCobro>0){pc.innerHTML=`⚠ COBRO: $${totalCobro.toLocaleString()}<br><small>Mora: $${mora.toLocaleString()} | Piezas: $${cobroPiezas.toLocaleString()}</small>`;pc.style.display='block';}
+  else{pc.style.display='none';}
+  document.getElementById('app').style.display='none';
+  document.getElementById('post-screen').classList.add('visible');
+}
+function nuevaTransaccion(){
+  document.getElementById('post-screen').classList.remove('visible');
+  document.getElementById('app').style.display='flex';
+  limpiarTodo();
+}
+
+// ══════════════════════════════════════════════
+//  INIT APP
+// ══════════════════════════════════════════════
+let INVENTARIO_LOADED = false;
+async function initApp(){
+  if(INVENTARIO_LOADED) return;
+  showLoading("CARGANDO...");
+  try{
+    const cfgDoc=await db.collection('config').doc('ciclo_actual').get();
+    if(cfgDoc.exists){
+      const d=cfgDoc.data();
+      CONFIG.ciclo=d.ciclo||CONFIG.ciclo;
+      CONFIG.gradDate=d.gradDate?new Date(d.gradDate):CONFIG.gradDate;
+      CONFIG.correos=d.correos||CONFIG.correos;
+      if(d.correos){
+        document.getElementById('cfg-csti').value=d.correos.CSTI||'';
+        document.getElementById('cfg-cvir').value=d.correos.CVIR||'';
+        document.getElementById('cfg-csta').value=d.correos.CSTA||'';
+        document.getElementById('cfg-cobros').value=d.correos.cobros||'';
+      }
+    }
+    const opsDoc=await db.collection('config').doc('operadores').get();
+    if(opsDoc.exists&&opsDoc.data().lista) OPERADORES=opsDoc.data().lista;
+    renderLoginUsers();
+    const invDoc=await db.collection('config').doc('inventario').get();
+    if(invDoc.exists&&invDoc.data().inv) INVENTARIO=invDoc.data().inv;
+    actualizarBarraCiclo();
+    renderInventario();
+    await cargarPrecios();
+    INVENTARIO_LOADED=true;
+  }catch(e){console.log(e);}
+  hideLoading();
+}
+
+function actualizarBarraCiclo(){
+  const ms=getMoraStart(CONFIG.gradDate);
+  document.getElementById('lbl-ciclo').textContent=CONFIG.ciclo;
+  document.getElementById('lbl-grad').textContent=CONFIG.gradDate.toLocaleDateString('es-DO',{day:'2-digit',month:'short',year:'numeric'});
+  document.getElementById('lbl-mora').textContent=ms.toLocaleDateString('es-DO',{day:'2-digit',month:'short',year:'numeric'});
+  document.getElementById('cfg-ciclo').value=CONFIG.ciclo;
+  document.getElementById('cfg-grad').value=CONFIG.gradDate.toISOString().split('T')[0];
+}
+
+// ══════════════════════════════════════════════
+//  LOADING
+// ══════════════════════════════════════════════
+function showLoading(txt='CARGANDO...'){document.getElementById('loading-txt').textContent=txt;document.getElementById('loading').classList.add('visible');}
+function hideLoading(){document.getElementById('loading').classList.remove('visible');}
+
+// ══════════════════════════════════════════════
+//  MODALES
+// ══════════════════════════════════════════════
+function openModal(id){
+  const el=document.getElementById('modal-'+id);
+  if(!el) return;
+  el.classList.add('visible');
+  document.body.classList.add('modal-open');
+  if(id==='cfg'){
+    consultarDB();
+    renderInventario();
+    cargarEstadisticasCiclo();
+    renderUsuarios();
+  }
+  if(id==='hist') cargarHistorico();
+}
+function closeModal(id){
+  const el=document.getElementById('modal-'+id);
+  if(!el) return;
+  el.classList.remove('visible');
+  document.body.classList.remove('modal-open');
+}
+function switchMTab(name,el){
+  document.querySelectorAll('.mtab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.msec').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('ms-'+name).classList.add('active');
+}
+function switchAddTab(name,el){
+  addTab=name;
+  document.querySelectorAll('.add-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('af-est').style.display=name==='est'?'block':'none';
+  document.getElementById('af-mae').style.display=name==='mae'?'block':'none';
+}
+
+// ══════════════════════════════════════════════
+//  MÓDULOS
+// ══════════════════════════════════════════════
+function setMod(mod,el){
+  cmod=mod;
+  document.querySelectorAll('.mod-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('lbl-mod').textContent=mod.toUpperCase();
+  const st=document.getElementById('sub-tabs');
+  st.classList.toggle('visible',mod==='maestros');
+  limpiarTodo();
+}
+function setSubMod(mod,el){
+  submod=mod;
+  document.querySelectorAll('.sub-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  limpiarTodo();
+}
+
+// ══════════════════════════════════════════════
+//  TECLADO / BÚSQUEDA
+// ══════════════════════════════════════════════
+function pk(v){
+  if(v==='ok'){buscar();return;}
+  if(v==='del'){cid=cid.slice(0,-1);}
+  else if(cid.length<10) cid+=v;
+  renderDisplay();
+}
+function renderDisplay(){
+  const d=document.getElementById('id-display');
+  if(!cid){d.innerHTML='<span class="id-placeholder">_ _ _ _ _ _ _ _</span>';return;}
+  d.innerHTML=cid.split('').map((c,i)=>`<span class="id-char filled">${c}</span>`).join('')+
+    (cid.length<10?'<span class="id-char cursor"> </span>':'');
+}
+function activarInputScanner(){
+  const inp=document.getElementById('scanner-input');
+  inp.value='';
+  inp.focus();
+}
+let scannerBuffer='';
+let scannerTimer=null;
+function scannerKeyDown(e){
+  if(e.key==='Enter'){
+    if(scannerBuffer.length>3){cid=scannerBuffer.replace(/\D/g,'').slice(0,10);renderDisplay();buscar();}
+    scannerBuffer='';
+    clearTimeout(scannerTimer);
+  }
+}
+function scannerInput(e){
+  scannerBuffer=e.target.value;
+  clearTimeout(scannerTimer);
+  scannerTimer=setTimeout(()=>{
+    if(scannerBuffer.length>3){cid=scannerBuffer.replace(/\D/g,'').slice(0,10);renderDisplay();buscar();}
+    scannerBuffer='';
+    e.target.value='';
+  },300);
+}
+
+async function buscar(){
+  const id=cid.trim();
+  if(!id||id.length<5) return;
+  ['msg-notfound','msg-dup','msg-info'].forEach(m=>document.getElementById(m).classList.remove('visible'));
+  showLoading("BUSCANDO...");
+  try{
+    let s=null;
+    if(cmod==='maestros'){
+      const snap=await db.collection('maestros').where('cedula','==',id).limit(1).get();
+      if(!snap.empty) s={...snap.docs[0].data(),_id:snap.docs[0].id,_tipo:'maestro'};
+    } else {
+      let snap=await db.collection('estudiantes').where('matricula','==',id).limit(1).get();
+      if(snap.empty) snap=await db.collection('estudiantes').where('emplid','==',id).limit(1).get();
+      if(!snap.empty) s={...snap.docs[0].data(),_id:snap.docs[0].id,_tipo:'estudiante'};
+    }
+    hideLoading();
+    if(!s){document.getElementById('msg-notfound').classList.add('visible');return;}
+    mostrarEstudiante(s);
+  }catch(e){hideLoading();console.log(e);}
+}
+
+// ══════════════════════════════════════════════
+//  MOSTRAR DATOS ESTUDIANTE
+// ══════════════════════════════════════════════
+function rayaLabel(r){
+  if(!r||r==='0') return 'Técnico Superior';
+  if(r==='I') return 'Grado';
+  if(r==='II') return 'Maestría';
+  if(r==='ESPECIAL') return 'Doc. Estudiante';
+  if(r==='III') return 'Doc. Maestro';
+  return r;
+}
+
+function mostrarEstudiante(s){
+  currentStudent=s;
+  const isMae=s._tipo==='maestro';
+  const badge=document.getElementById('s-badge');
+  badge.textContent=isMae?'MAESTRO':'ESTUDIANTE';
+  badge.className='s-badge '+(isMae?'badge-mae':'badge-est');
+  document.getElementById('s-name').textContent=s.nombre||s.nombre_completo||'—';
+  document.getElementById('sign-who').textContent=isMae?'Maestro':'Estudiante';
+
+  const accionActual=cmod==='maestros'?submod:cmod;
+  const yaEntregado=s.entregado===true||s.entregado===CONFIG.ciclo;
+  const yaDevuelto=s.devuelto===true||s.devuelto===CONFIG.ciclo;
+
+  const grid=document.getElementById('s-grid');
+  if(isMae){
+    grid.innerHTML=`
+      <div class="sf"><div class="fl">Cédula</div><div class="fv hi">${s.cedula||'—'}</div></div>
+      <div class="sf"><div class="fl">Campus</div><div class="fv">${s.campus||'—'}</div></div>
+      <div class="sf"><div class="fl">Color</div><div class="fv">${s.color||'—'}</div></div>
+      <div class="sf"><div class="fl">Raya</div><div class="fv">${rayaLabel(s.raya)}</div></div>
+      <div class="sf"><div class="fl">Estado Entrega</div><div class="fv ${yaEntregado?'warn':''}">${yaEntregado?'✓ ENTREGADO':'PENDIENTE'}</div></div>
+      <div class="sf"><div class="fl">Estado Devolución</div><div class="fv ${yaDevuelto?'warn':''}">${yaDevuelto?'✓ DEVUELTO':'PENDIENTE'}</div></div>
+    `;
+  } else {
+    const moraInfo=calcMora(s.raya);
+    const moraBox=document.getElementById('mora-box');
+    if(cmod==='devolucion'&&moraInfo.monto>0){
+      document.getElementById('mora-amt').textContent='$'+moraInfo.monto.toLocaleString();
+      document.getElementById('mora-days').textContent=moraInfo.dias;
+      document.getElementById('mora-sem').textContent=moraInfo.semana;
+      moraBox.classList.add('visible');
+    } else moraBox.classList.remove('visible');
+    grid.innerHTML=`
+      <div class="sf"><div class="fl">Matrícula</div><div class="fv hi">${s.matricula||'—'}</div></div>
+      <div class="sf"><div class="fl">Emplid</div><div class="fv">${s.emplid||'—'}</div></div>
+      <div class="sf"><div class="fl">Campus</div><div class="fv">${s.campus||'—'}</div></div>
+      <div class="sf"><div class="fl">Facultad</div><div class="fv">${s.facultad||'—'}</div></div>
+      <div class="sf"><div class="fl">Color</div><div class="fv">${s.color||'—'}</div></div>
+      <div class="sf"><div class="fl">Raya</div><div class="fv">${rayaLabel(s.raya)}</div></div>
+      <div class="sf"><div class="fl">Programa</div><div class="fv" style="grid-column:span 1;">${s.programa||'—'}</div></div>
+      <div class="sf"><div class="fl">Estado Entrega</div><div class="fv ${yaEntregado?'warn':''}">${yaEntregado?'✓ ENTREGADO':'PENDIENTE'}</div></div>
+      <div class="sf"><div class="fl">Estado Devolución</div><div class="fv ${yaDevuelto?'warn':''}">${yaDevuelto?'✓ DEVUELTO':'PENDIENTE'}</div></div>
+      <div class="cel-row">
+        <span class="cel-lbl">Celular:</span>
+        <input class="cel-input" id="cel-edit" value="${s.celular||''}" placeholder="809-000-0000"/>
+        <button class="cel-save" onclick="guardarCelular()">💾</button>
+        <span class="cel-lbl" style="margin-left:6px;">Correo:</span>
+        <input class="cel-input" id="mail-edit" value="${s.correo||''}" placeholder="correo@pucmm.edu.do"/>
+        <button class="cel-save" onclick="guardarCorreo()">💾</button>
+      </div>
+    `;
+  }
+
+  if(cmod==='devolucion'&&!isMae){
+    const pp=document.getElementById('piezas-panel');
+    pp.style.display='block';
+    const raya=s.raya;
+    const tope=(raya==='ESPECIAL'||raya==='III')?30000:calcularTotalTraje();
+    piezas.toga=true; piezas.esclavina=true; piezas.borla=true; piezas.birrete=true;
+    ['toga','esclavina','borla','birrete'].forEach(p=>{document.getElementById('p-'+p).className='pieza-btn ok';});
+    document.getElementById('p-toga-precio').textContent='$'+PRECIOS.piezas.toga.toLocaleString('es-DO');
+    document.getElementById('cobro-box').classList.remove('visible');
+  } else {
+    document.getElementById('piezas-panel').style.display='none';
+  }
+
+  const dr=document.getElementById('datos-row');
+  const needSign=true;
+  dr.className='datos-row '+(needSign?'con-firma':'sin-firma');
+  document.getElementById('sign-panel').style.display=needSign?'flex':'none';
+  signed=false;
+  document.getElementById('sign-status').textContent='Dibuje su firma arriba';
+  document.getElementById('sign-status').classList.remove('signed');
+
+  document.getElementById('fase-teclado').style.display='none';
+  document.getElementById('fase-datos').classList.add('visible');
+
+  setTimeout(()=>{initCanvas();},100);
+
+  if(yaEntregado&&accionActual==='entrega'){
+    const m=document.getElementById('msg-dup');
+    m.textContent='⚠ Ya registrado como ENTREGADO en este ciclo';
+    m.classList.add('visible');
+  }
+  if(yaDevuelto&&accionActual==='devolucion'){
+    const m=document.getElementById('msg-dup');
+    m.textContent='⚠ Ya registrado como DEVUELTO en este ciclo';
+    m.classList.add('visible');
+  }
+}
+
+// ══════════════════════════════════════════════
+//  PIEZAS
+// ══════════════════════════════════════════════
+function togglePieza(p){
+  piezas[p]=!piezas[p];
+  document.getElementById('p-'+p).className='pieza-btn '+(piezas[p]?'ok':'falta');
+  calcCobro();
+}
+
+function calcCobro(){
+  if(!currentStudent) return{cobro:0,faltantes:[]};
+  const raya=currentStudent.raya;
+  const tope=(raya==='ESPECIAL'||raya==='III')?30000:calcularTotalTraje();
+  let cobro=0; const faltantes=[];
+  if(!piezas.toga){cobro+=PRECIOS.piezas.toga;faltantes.push(`Toga $${PRECIOS.piezas.toga.toLocaleString()}`);}
+  if(!piezas.esclavina){cobro+=PRECIOS.piezas.esclavina;faltantes.push(`Esclavina $${PRECIOS.piezas.esclavina.toLocaleString()}`);}
+  if(!piezas.borla){cobro+=PRECIOS.piezas.borla;faltantes.push(`Borla $${PRECIOS.piezas.borla.toLocaleString()}`);}
+  if(!piezas.birrete){cobro+=PRECIOS.piezas.birrete;faltantes.push(`Birrete $${PRECIOS.piezas.birrete.toLocaleString()}`);}
+  cobro=Math.min(cobro,tope);
+  const cb=document.getElementById('cobro-box');
+  if(faltantes.length){cb.innerHTML='💰 COBRO: <strong>$'+cobro.toLocaleString()+'</strong><br><small>'+faltantes.join(' | ')+'</small>';cb.classList.add('visible');}
+  else cb.classList.remove('visible');
+  return{cobro,faltantes};
+}
+
+// ══════════════════════════════════════════════
+//  FIRMA
+// ══════════════════════════════════════════════
+function initCanvas(){
+  const canvas=document.getElementById('sign-canvas');
+  if(!canvas) return;
+  const wrap=canvas.parentElement;
+  canvas.width=wrap.clientWidth-6;
+  canvas.height=Math.max(wrap.clientHeight-6,130);
+  ctx=canvas.getContext('2d');
+  ctx.strokeStyle='#000';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.lineJoin='round';
+  canvas.onmousedown=e=>{drawing=true;[lastX,lastY]=getPos(e,canvas);};
+  canvas.onmousemove=e=>{if(!drawing)return;const[x,y]=getPos(e,canvas);ctx.beginPath();ctx.moveTo(lastX,lastY);ctx.lineTo(x,y);ctx.stroke();[lastX,lastY]=[x,y];};
+  canvas.onmouseup=canvas.onmouseleave=()=>{drawing=false;};
+  canvas.ontouchstart=e=>{e.preventDefault();drawing=true;[lastX,lastY]=getPos(e.touches[0],canvas);};
+  canvas.ontouchmove=e=>{e.preventDefault();if(!drawing)return;const[x,y]=getPos(e.touches[0],canvas);ctx.beginPath();ctx.moveTo(lastX,lastY);ctx.lineTo(x,y);ctx.stroke();[lastX,lastY]=[x,y];};
+  canvas.ontouchend=()=>{drawing=false;};
+}
+function getPos(e,canvas){
+  const r=canvas.getBoundingClientRect();
+  return[e.clientX-r.left,e.clientY-r.top];
+}
+function clearSign(){
+  if(!ctx) return;
+  const canvas=document.getElementById('sign-canvas');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  signed=false;
+  document.getElementById('sign-status').textContent='Dibuje su firma arriba';
+  document.getElementById('sign-status').classList.remove('signed');
+}
+function acceptSign(){
+  const canvas=document.getElementById('sign-canvas');
+  const data=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+  const hasContent=Array.from(data).some((v,i)=>i%4===3&&v>0);
+  if(!hasContent){alert('Por favor dibuje la firma antes de aceptar.');return;}
+  signed=true;
+  document.getElementById('sign-status').textContent='✓ Firma aceptada';
+  document.getElementById('sign-status').classList.add('signed');
+}
+
+// ══════════════════════════════════════════════
+//  FINALIZAR
+// ══════════════════════════════════════════════
+async function finalizar(){
+  if(!currentStudent){alert('No hay estudiante seleccionado.');return;}
+  if(!signed){alert('Por favor acepte la firma antes de finalizar.');return;}
+  const s=currentStudent;
+  const accion=cmod==='maestros'?submod:cmod;
+  const isMae=s._tipo==='maestro';
+  const canvas=document.getElementById('sign-canvas');
+  const firmaBase64=canvas.toDataURL('image/png');
+  const{monto:mora}=calcMora(s.raya||'I');
+  const tope=(s.raya==='ESPECIAL'||s.raya==='III')?30000:calcularTotalTraje();
+  let{cobro:cobroPiezas,faltantes}=accion==='devolucion'&&!isMae?calcCobro():{cobro:0,faltantes:[]};
+  const moraCobro=accion==='devolucion'?mora:0;
+  const totalCobro=Math.min(moraCobro+cobroPiezas,tope);
+  showLoading("GUARDANDO...");
+  try{
+    const ts=new Date().toISOString();
+    const coleccion=isMae?'maestros':'estudiantes';
+    const updateData={};
+    if(accion==='entrega') updateData.entregado=CONFIG.ciclo;
+    if(accion==='devolucion'){updateData.devuelto=CONFIG.ciclo; if(!isMae&&accion==='devolucion') updateData.devuelto=CONFIG.ciclo;}
+    await db.collection(coleccion).doc(s._id).update(updateData);
+    const regData={
+      estudianteId:s._id, nombre:s.nombre||s.nombre_completo, tipo:s._tipo,
+      accion, ciclo:CONFIG.ciclo, timestamp:ts, operador:CURRENT_USER?.name||'—',
+      mora:moraCobro, cobroPiezas, totalCobro, faltantes,
+      firma:firmaBase64.substring(0,100),
+      piezas:{...piezas}
+    };
+    await db.collection('registros').add(regData);
+    if(accion==='devolucion'&&!isMae){
+      const raya=s.raya;
+      const col=s.color||'AMARILLO ORO';
+      if(INVENTARIO[col]){
+        if(raya==='0'||!raya) INVENTARIO[col].col0=(INVENTARIO[col].col0||0)+1;
+        else if(raya==='I') INVENTARIO[col].col1=(INVENTARIO[col].col1||0)+1;
+        else if(raya==='II') INVENTARIO[col].col2=(INVENTARIO[col].col2||0)+1;
+        else if(raya==='ESPECIAL') INVENTARIO[col].col3E=(INVENTARIO[col].col3E||0)+1;
+        else if(raya==='III') INVENTARIO[col].col3M=(INVENTARIO[col].col3M||0)+1;
+        await db.collection('config').doc('inventario').set({inv:INVENTARIO});
+      }
+    }
+    if(accion==='entrega'&&!isMae){
+      const raya=s.raya;
+      const col=s.color||'AMARILLO ORO';
+      if(INVENTARIO[col]){
+        if(raya==='0'||!raya) INVENTARIO[col].col0=Math.max(0,(INVENTARIO[col].col0||0)-1);
+        else if(raya==='I') INVENTARIO[col].col1=Math.max(0,(INVENTARIO[col].col1||0)-1);
+        else if(raya==='II') INVENTARIO[col].col2=Math.max(0,(INVENTARIO[col].col2||0)-1);
+        else if(raya==='ESPECIAL') INVENTARIO[col].col3E=Math.max(0,(INVENTARIO[col].col3E||0)-1);
+        await db.collection('config').doc('inventario').set({inv:INVENTARIO});
+      }
+    }
+    hideLoading();
+    await enviarCorreo(s,accion,totalCobro,mora,cobroPiezas,faltantes,firmaBase64,ts);
+    mostrarPostTransaccion(accion,s,totalCobro,moraCobro,cobroPiezas);
+  }catch(e){hideLoading();console.log(e);alert('Error al guardar: '+e.message);}
+}
+
+async function enviarCorreo(s,accion,totalCobro,mora,cobroPiezas,faltantes,firma,ts){
+  const isMae=s._tipo==='maestro';
+  const campus=s.campus||'CSTI';
+  const destinos=CONFIG.correos[campus]||CONFIG.correos.CSTI;
+  const accionLabel=accion==='entrega'?'ENTREGA':'DEVOLUCIÓN';
+  const piezasStr=accion==='devolucion'&&!isMae
+    ? Object.entries(piezas).map(([k,v])=>v?`✓${k}`:`✗${k}(FALTA)`).join(', ')
+    : 'N/A';
+  const cobroStr=totalCobro>0
+    ? `⚠ COBRO: $${totalCobro.toLocaleString()} | Mora: $${mora.toLocaleString()} | Piezas: $${cobroPiezas.toLocaleString()}`
+    : '✓ Sin cobros';
+  const subject=`[PUCMM TOGAS] ${accionLabel} — ${s.nombre||s.nombre_completo} — ${ts.substring(0,10)}`;
+  const body=`${accionLabel} REGISTRADA\n\nNombre: ${s.nombre||s.nombre_completo}\nCampus: ${campus}\nColor: ${s.color||'—'} | Raya: ${rayaLabel(s.raya)}\nCiclo: ${CONFIG.ciclo}\nFecha: ${ts}\nOperador: ${CURRENT_USER?.name||'—'}\n${accion==='devolucion'&&!isMae?`Piezas: ${piezasStr}\n`:''}\n${cobroStr}`;
+  const mailtoLink=`mailto:${destinos}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.open(mailtoLink);
+  if(totalCobro>0){
+    const cobrosDest=CONFIG.correos.cobros||'';
+    const cobroLink=`mailto:${cobrosDest}?subject=${encodeURIComponent('[COBRO] '+subject)}&body=${encodeURIComponent(body)}`;
+    setTimeout(()=>window.open(cobroLink),500);
+  }
+}
+
+function limpiarTodo(){
+  cid='';
+  currentStudent=null;
+  signed=false;
+  piezas.toga=true; piezas.esclavina=true; piezas.borla=true; piezas.birrete=true;
+  renderDisplay();
+  ['msg-notfound','msg-dup','msg-info'].forEach(m=>document.getElementById(m).classList.remove('visible'));
+  document.getElementById('mora-box').classList.remove('visible');
+  document.getElementById('cobro-box').classList.remove('visible');
+  document.getElementById('piezas-panel').style.display='none';
+  document.getElementById('fase-teclado').style.display='flex';
+  document.getElementById('fase-datos').classList.remove('visible');
+  document.getElementById('sign-status').textContent='Dibuje su firma arriba';
+  document.getElementById('sign-status').classList.remove('signed');
+}
+
+// ══════════════════════════════════════════════
+//  GUARDAR CELULAR / CORREO
+// ══════════════════════════════════════════════
+async function guardarCelular(){
+  if(!currentStudent) return;
+  const val=document.getElementById('cel-edit').value.trim();
+  await db.collection(currentStudent._tipo==='maestro'?'maestros':'estudiantes').doc(currentStudent._id).update({celular:val});
+  currentStudent.celular=val;
+  alert('Celular actualizado');
+}
+async function guardarCorreo(){
+  if(!currentStudent) return;
+  const val=document.getElementById('mail-edit').value.trim();
+  await db.collection(currentStudent._tipo==='maestro'?'maestros':'estudiantes').doc(currentStudent._id).update({correo:val});
+  currentStudent.correo=val;
+  alert('Correo actualizado');
+}
+
+// ══════════════════════════════════════════════
+//  INVENTARIO
+// ══════════════════════════════════════════════
+function renderInventario(){
+  const tbody=document.getElementById('inv-tbody');
+  if(!tbody) return;
+  const colorClass={'AMARILLO ORO':'color-amarillo','AMARILLO CLARO':'color-amarillo-cl','AZUL CIELO':'color-azul-cielo','AZUL OSCURO':'color-azul-oscuro','ROJO':'color-rojo','NEGRO':'color-negro'};
+  tbody.innerHTML=Object.keys(INVENTARIO).map(c=>{
+    const inv=INVENTARIO[c]||{};
+    const cls=colorClass[c]||'';
+    return `<tr>
+      <td class="color-name ${cls}">${c}</td>
+      <td><input type="number" min="0" value="${inv.col0||0}" onchange="INVENTARIO['${c}'].col0=parseInt(this.value)||0"/></td>
+      <td><input type="number" min="0" value="${inv.col1||0}" onchange="INVENTARIO['${c}'].col1=parseInt(this.value)||0"/></td>
+      <td><input type="number" min="0" value="${inv.col2||0}" onchange="INVENTARIO['${c}'].col2=parseInt(this.value)||0"/></td>
+      <td><input type="number" min="0" value="${inv.col3E||0}" onchange="INVENTARIO['${c}'].col3E=parseInt(this.value)||0"/></td>
+      <td><input type="number" min="0" value="${inv.col3M||0}" onchange="INVENTARIO['${c}'].col3M=parseInt(this.value)||0"/></td>
+    </tr>`;
+  }).join('');
+}
+async function guardarInventarioDB(){
+  showLoading("GUARDANDO...");
+  await db.collection('config').doc('inventario').set({inv:INVENTARIO});
+  hideLoading();
+  alert('Inventario guardado');
+}
+
+// ══════════════════════════════════════════════
+//  CONFIGURACIÓN / GUARDAR v3.0
+// ══════════════════════════════════════════════
+async function guardarConfig(){
+  showLoading("GUARDANDO...");
+  CONFIG.ciclo=document.getElementById('cfg-ciclo').value;
+  CONFIG.gradDate=new Date(document.getElementById('cfg-grad').value);
+  CONFIG.correos.CSTI=document.getElementById('cfg-csti').value;
+  CONFIG.correos.CVIR=document.getElementById('cfg-cvir').value;
+  CONFIG.correos.CSTA=document.getElementById('cfg-csta').value;
+  CONFIG.correos.cobros=document.getElementById('cfg-cobros').value;
+
+  // Guardar precios v3.0
+  PRECIOS.piezas.toga=parseInt(document.getElementById('precio-toga').value)||3300;
+  PRECIOS.piezas.esclavina=parseInt(document.getElementById('precio-esclavina').value)||1920;
+  PRECIOS.piezas.borla=parseInt(document.getElementById('precio-borla').value)||180;
+  PRECIOS.piezas.birrete=parseInt(document.getElementById('precio-birrete').value)||600;
+  PRECIOS.moras.dias_8_14=parseInt(document.getElementById('mora-8-14').value)||100;
+  PRECIOS.moras.dias_15_20=parseInt(document.getElementById('mora-15-20').value)||150;
+  PRECIOS.moras.dias_21_30=parseInt(document.getElementById('mora-21-30').value)||200;
+
+  try{
+    await db.collection('config').doc('ciclo_actual').set({
+      ciclo:CONFIG.ciclo,
+      gradDate:CONFIG.gradDate.toISOString(),
+      correos:CONFIG.correos
+    });
+    await db.collection('config').doc('precios').set(PRECIOS);
+    actualizarBarraCiclo();
+    actualizarPreciosPiezasUI();
+    renderizarPreciosEnUI();
+    hideLoading();
+    closeModal('cfg');
+    alert('Configuración guardada ✓');
+  }catch(e){hideLoading();alert('Error: '+e.message);}
+}
+
+async function cambiarPasswordSUMINISTROS(){
+  const np=document.getElementById('new-SUMINISTROS-pass').value;
+  const cp=document.getElementById('confirm-SUMINISTROS-pass').value;
+  if(!np||np!==cp){alert('Las contraseñas no coinciden');return;}
+  if(np.length<6){alert('Mínimo 6 caracteres');return;}
+  showLoading("CAMBIANDO...");
+  try{
+    await auth.currentUser.updatePassword(np);
+    hideLoading();
+    alert('Contraseña cambiada ✓');
+    document.getElementById('new-SUMINISTROS-pass').value='';
+    document.getElementById('confirm-SUMINISTROS-pass').value='';
+  }catch(e){hideLoading();alert('Error: '+e.message);}
+}
+
+// ══════════════════════════════════════════════
+//  ESTADÍSTICAS CICLO
+// ══════════════════════════════════════════════
+async function cargarEstadisticasCiclo(){
+  try{
+    const estSnap=await db.collection('estudiantes').get();
+    const maeSnap=await db.collection('maestros').get();
+    const regSnap=await db.collection('registros').where('ciclo','==',CONFIG.ciclo).get();
+    const total=estSnap.size+maeSnap.size;
+    let ent=0,dev=0,mora=0;
+    regSnap.forEach(d=>{
+      const r=d.data();
+      if(r.accion==='entrega') ent++;
+      if(r.accion==='devolucion') dev++;
+      if(r.totalCobro>0) mora++;
+    });
+    const pend=total-ent;
+    document.getElementById('st-ciclo-num').textContent=CONFIG.ciclo;
+    document.getElementById('st-total').textContent=total;
+    document.getElementById('st-ent').textContent=ent;
+    document.getElementById('st-dev').textContent=dev;
+    document.getElementById('st-pend').textContent=Math.max(0,pend);
+    document.getElementById('st-mora').textContent=mora;
+    if(total>0){
+      document.getElementById('bar-ent').style.width=(ent/total*100)+'%';
+      document.getElementById('bar-dev').style.width=(dev/total*100)+'%';
+      document.getElementById('bar-pend').style.width=(Math.max(0,pend)/total*100)+'%';
+      document.getElementById('bar-mora').style.width=(mora/total*100)+'%';
+    }
+    document.getElementById('db-est-count').textContent=estSnap.size;
+    document.getElementById('db-mae-count').textContent=maeSnap.size;
+    document.getElementById('db-reg-count').textContent=regSnap.size;
+  }catch(e){console.log(e);}
+}
+
+// ══════════════════════════════════════════════
+//  DB OPERACIONES
+// ══════════════════════════════════════════════
+async function consultarDB(){
+  try{
+    const estSnap=await db.collection('estudiantes').get();
+    const maeSnap=await db.collection('maestros').get();
+    const regSnap=await db.collection('registros').where('ciclo','==',CONFIG.ciclo).get();
+    document.getElementById('db-est-count').textContent=estSnap.size;
+    document.getElementById('db-mae-count').textContent=maeSnap.size;
+    document.getElementById('db-reg-count').textContent=regSnap.size;
+  }catch(e){console.log(e);}
+}
+async function eliminarDB(){
+  if(!confirm('¿Eliminar TODOS los estudiantes y maestros de la DB?')) return;
+  showLoading("ELIMINANDO...");
+  try{
+    const batch1=db.batch();
+    const es=await db.collection('estudiantes').get();
+    es.forEach(d=>batch1.delete(d.ref));
+    await batch1.commit();
+    const batch2=db.batch();
+    const ms=await db.collection('maestros').get();
+    ms.forEach(d=>batch2.delete(d.ref));
+    await batch2.commit();
+    hideLoading(); alert('DB eliminada');
+  }catch(e){hideLoading();alert('Error: '+e.message);}
+}
+async function borrarSoloRegistros(){
+  if(!confirm('¿Borrar todos los registros del ciclo actual?')) return;
+  showLoading("BORRANDO...");
+  try{
+    const snap=await db.collection('registros').where('ciclo','==',CONFIG.ciclo).get();
+    const batch=db.batch();
+    snap.forEach(d=>batch.delete(d.ref));
+    await batch.commit();
+    hideLoading(); alert('Registros borrados');
+  }catch(e){hideLoading();alert('Error: '+e.message);}
+}
+async function reiniciarDB(){
+  if(!confirm('⚠ REINICIAR BASE DE DATOS COMPLETA - se borrarán TODOS los datos (estudiantes, maestros, registros, inventario). ¿Confirmar?')) return;
+  showLoading("REINICIANDO...");
+  try{
+    for(const col of ['estudiantes','maestros','registros']){
+      let snap=await db.collection(col).limit(500).get();
+      while(!snap.empty){
+        const batch=db.batch();
+        snap.forEach(d=>batch.delete(d.ref));
+        await batch.commit();
+        snap=await db.collection(col).limit(500).get();
+      }
+    }
+    await db.collection('config').doc('inventario').set({inv:{}});
+    INVENTARIO={};
+    COLORES.forEach(c=>{INVENTARIO[c]={col0:0,col1:0,col2:0,col3E:0,col3M:0};});
+    INVENTARIO['NEGRO']={col0:0,col1:0,col2:0,col3E:0,col3M:0};
+    renderInventario();
+    INVENTARIO_LOADED=false;
+    hideLoading(); alert('Base de datos reiniciada ✓');
+  }catch(e){hideLoading();alert('Error: '+e.message);}
+}
+async function reiniciarCiclo(){
+  const nuevoCiclo=prompt('Ingresa el número del nuevo ciclo:',CONFIG.ciclo);
+  if(!nuevoCiclo) return;
+  if(!confirm(`¿Reiniciar ciclo y cambiar a ${nuevoCiclo}?`)) return;
+  showLoading("REINICIANDO CICLO...");
+  try{
+    const snap=await db.collection('registros').where('ciclo','==',CONFIG.ciclo).get();
+    const batch=db.batch();
+    snap.forEach(d=>batch.delete(d.ref));
+    await batch.commit();
+    const estSnap=await db.collection('estudiantes').get();
+    const batch2=db.batch();
+    estSnap.forEach(d=>{batch2.update(d.ref,{entregado:false,devuelto:false});});
+    await batch2.commit();
+    const maeSnap=await db.collection('maestros').get();
+    const batch3=db.batch();
+    maeSnap.forEach(d=>{batch3.update(d.ref,{entregado:false,devuelto:false});});
+    await batch3.commit();
+    CONFIG.ciclo=nuevoCiclo.trim();
+    await db.collection('config').doc('ciclo_actual').update({ciclo:CONFIG.ciclo});
+    actualizarBarraCiclo();
+    hideLoading(); alert('Ciclo reiniciado ✓');
+  }catch(e){hideLoading();alert('Error: '+e.message);}
+}
+async function cierreCiclo(){
+  if(!confirm('¿Generar cierre de ciclo?')) return;
+  await descargarReporte('todo');
+}
+
+// ══════════════════════════════════════════════
+//  USUARIOS
+// ══════════════════════════════════════════════
+function renderUsuarios(){
+  const list=document.getElementById('user-list');
+  list.innerHTML=OPERADORES.map((u,i)=>`
+    <div class="user-item">
+      <div class="user-info"><div class="user-name">${u.name}</div><div class="user-role">${u.isSUMINISTROS?'Admin':'Operador'}</div></div>
+      <button class="user-del" onclick="eliminarUsuario(${i})">Eliminar</button>
+    </div>`).join('');
+}
+async function agregarUsuario(){
+  const name=document.getElementById('new-user-name').value.trim();
+  const pass=document.getElementById('new-user-pass').value.trim();
+  if(!name||!pass){alert('Completa nombre y contraseña');return;}
+  OPERADORES.push({name,passHash:btoa(pass),isSUMINISTROS:false});
+  await db.collection('config').doc('operadores').set({lista:OPERADORES});
+  renderUsuarios(); renderLoginUsers();
+  document.getElementById('new-user-name').value='';
+  document.getElementById('new-user-pass').value='';
+}
+async function eliminarUsuario(i){
+  if(!confirm('¿Eliminar operador?')) return;
+  OPERADORES.splice(i,1);
+  await db.collection('config').doc('operadores').set({lista:OPERADORES});
+  renderUsuarios(); renderLoginUsers();
+}
+
+// ══════════════════════════════════════════════
+//  EXCEL UPLOAD
+// ══════════════════════════════════════════════
+async function subirExcel(event){
+  const file=event.target.files[0];
+  if(!file) return;
+  showLoading("PROCESANDO EXCEL...");
+  const data=await file.arrayBuffer();
+  const wb=XLSX.read(data);
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(ws,{header:1});
+  const headers=rows[0]?.map(h=>String(h).toLowerCase().trim())||[];
+  const records=rows.slice(1).filter(r=>r.length>0);
+  let ok=0,err=0;
+  const prog=document.getElementById('db-progress');
+  const bar=document.getElementById('db-progress-bar');
+  prog.classList.add('visible');
+  for(let i=0;i<records.length;i++){
+    const r=records[i];
+    const get=(keys)=>{for(const k of keys){const idx=headers.indexOf(k);if(idx>=0&&r[idx]!==undefined)return String(r[idx]).trim();}return '';};
+    const mat=get(['matricula','matrícula','mat']);
+    const emp=get(['emplid','emp']);
+    const nom=get(['nombre','nombre completo','name']);
+    if(!mat&&!emp&&!nom) continue;
+    try{
+      const doc={
+        matricula:mat, emplid:emp, nombre:nom,
+        campus:get(['campus']),
+        facultad:get(['facultad','fac']),
+        programa:get(['programa','carrera']),
+        color:get(['color']).toUpperCase(),
+        raya:get(['raya']),
+        celular:get(['celular','telefono','teléfono','cel','tel']),
+        correo:get(['correo','email','mail']),
+        entregado:false, devuelto:false
+      };
+      const id=mat||emp;
+      await db.collection('estudiantes').doc(id).set(doc,{merge:true});
+      ok++;
+    }catch(e){err++;console.log(e);}
+    bar.style.width=((i+1)/records.length*100)+'%';
+    if(i%10===0) document.getElementById('loading-txt').textContent=`SUBIENDO ${i+1}/${records.length}...`;
+  }
+  hideLoading(); prog.classList.remove('visible');
+  alert(`Subida completada: ${ok} exitosos, ${err} errores`);
+  consultarDB();
+}
+
+async function subirExcelMaestros(event){
+  const file=event.target.files[0];
+  if(!file) return;
+  showLoading("PROCESANDO EXCEL MAESTROS...");
+  const data=await file.arrayBuffer();
+  const wb=XLSX.read(data);
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(ws,{header:1});
+  const headers=rows[0]?.map(h=>String(h).toLowerCase().trim())||[];
+  const records=rows.slice(1).filter(r=>r.length>0);
+  let ok=0,err=0;
+  for(let i=0;i<records.length;i++){
+    const r=records[i];
+    const get=(keys)=>{for(const k of keys){const idx=headers.indexOf(k);if(idx>=0&&r[idx]!==undefined)return String(r[idx]).trim();}return '';};
+    const ced=get(['cedula','cédula','id']);
+    const nom=get(['nombre','nombre completo','name']);
+    if(!ced&&!nom) continue;
+    try{
+      const doc={
+        cedula:ced, nombre:nom,
+        campus:get(['campus']),
+        color:get(['color']).toUpperCase(),
+        raya:get(['raya']),
+        telefono:get(['telefono','teléfono','tel','celular','cel']),
+        correo:get(['correo','email','mail']),
+        entregado:false, devuelto:false
+      };
+      await db.collection('maestros').doc(ced||nom).set(doc,{merge:true});
+      ok++;
+    }catch(e){err++;console.log(e);}
+  }
+  hideLoading();
+  alert(`Maestros subidos: ${ok} exitosos, ${err} errores`);
+  consultarDB();
+}
+
+async function subirEntregados(event){
+  const file=event.target.files[0];
+  if(!file) return;
+  showLoading("PROCESANDO...");
+  const data=await file.arrayBuffer();
+  const wb=XLSX.read(data);
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(ws,{header:1}).slice(0);
+  let ok=0;
+  for(const row of rows){
+    const id=String(row[0]||'').trim();
+    if(!id) continue;
+    try{
+      let snap=await db.collection('estudiantes').where('matricula','==',id).limit(1).get();
+      if(snap.empty) snap=await db.collection('estudiantes').where('emplid','==',id).limit(1).get();
+      if(!snap.empty){await snap.docs[0].ref.update({entregado:CONFIG.ciclo});ok++;}
+    }catch(e){console.log(e);}
+  }
+  hideLoading();
+  alert(`${ok} estudiantes marcados como entregados`);
+}
+
+// ══════════════════════════════════════════════
+//  PLANTILLAS
+// ══════════════════════════════════════════════
+function descargarPlantillaEstudiantes(){
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet([
+    ['matricula','emplid','nombre','campus','facultad','programa','color','raya','celular','correo'],
+    ['2020-0001','12345678','Juan Pérez','CSTI','FCSA','Ingeniería Civil','AZUL OSCURO','I','809-555-0001','juan@pucmm.edu.do']
+  ]);
+  XLSX.utils.book_append_sheet(wb,ws,'Estudiantes');
+  XLSX.writeFile(wb,'plantilla_estudiantes.xlsx');
+}
+function descargarPlantillaMaestros(){
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet([
+    ['cedula','nombre','campus','color','raya','telefono','correo'],
+    ['001-0000001-1','Dr. Nombre Apellido','CSTI','AMARILLO ORO','III','809-555-0002','dr@pucmm.edu.do']
+  ]);
+  XLSX.utils.book_append_sheet(wb,ws,'Maestros');
+  XLSX.writeFile(wb,'plantilla_maestros.xlsx');
+}
+function descargarPlantillaEntregados(){
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet([['ID (Matrícula o Emplid)'],['2020-0001'],['12345678']]);
+  XLSX.utils.book_append_sheet(wb,ws,'Entregados');
+  XLSX.writeFile(wb,'plantilla_entregados.xlsx');
+}
+
+// ══════════════════════════════════════════════
+//  REPORTES
+// ══════════════════════════════════════════════
+function setReporteHoy(){
+  const hoy=new Date().toISOString().split('T')[0];
+  document.getElementById('rep-desde').value=hoy;
+  document.getElementById('rep-hasta').value=hoy;
+}
+async function descargarReporteFechas(){
+  const desde=document.getElementById('rep-desde').value;
+  const hasta=document.getElementById('rep-hasta').value;
+  const accionFiltro=document.getElementById('rep-accion').value;
+  if(!desde||!hasta){alert('Selecciona el rango de fechas');return;}
+  showLoading("GENERANDO...");
+  try{
+    const snap=await db.collection('registros').orderBy('timestamp').get();
+    const rows=[['Nombre','Tipo','Acción','Campus','Color','Raya','Mora','Cobro Piezas','Total','Operador','Fecha']];
+    snap.forEach(d=>{
+      const r=d.data();
+      const fecha=r.timestamp?.substring(0,10)||'';
+      if(fecha<desde||fecha>hasta) return;
+      if(accionFiltro!=='todas'&&r.accion!==accionFiltro) return;
+      rows.push([r.nombre,r.tipo,r.accion,r.campus||'—',r.color||'—',r.raya||'—',r.mora||0,r.cobroPiezas||0,r.totalCobro||0,r.operador||'—',r.timestamp]);
+    });
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Reporte');
+    XLSX.writeFile(wb,`reporte_${desde}_${hasta}.xlsx`);
+    hideLoading();
+  }catch(e){hideLoading();alert('Error: '+e.message);}
+}
+
+async function descargarReporte(tipo){
+  showLoading("GENERANDO REPORTE...");
+  try{
+    let rows=[];let filename='reporte.xlsx';
+    if(tipo==='todo'||tipo==='CSTI'||tipo==='CVIR'||tipo==='CSTA'){
+      const snap=await db.collection('estudiantes').get();
+      rows=[['Matrícula','Emplid','Nombre','Campus','Facultad','Programa','Color','Raya','Celular','Correo','Entregado','Devuelto']];
+      snap.forEach(d=>{const s=d.data();if(tipo!=='todo'&&s.campus!==tipo)return;rows.push([s.matricula,s.emplid,s.nombre,s.campus,s.facultad,s.programa,s.color,s.raya,s.celular,s.correo,s.entregado?'SI':'NO',s.devuelto?'SI':'NO']);});
+      filename=`estudiantes_${tipo}_${CONFIG.ciclo}.xlsx`;
+    } else if(tipo==='maestros'){
+      const snap=await db.collection('maestros').get();
+      rows=[['Cédula','Nombre','Campus','Color','Raya','Teléfono','Correo','Entregado','Devuelto']];
+      snap.forEach(d=>{const s=d.data();rows.push([s.cedula,s.nombre,s.campus,s.color,s.raya,s.telefono,s.correo,s.entregado?'SI':'NO',s.devuelto?'SI':'NO']);});
+      filename=`maestros_${CONFIG.ciclo}.xlsx`;
+    } else if(tipo==='faltantes-entrega-est'){
+      const snap=await db.collection('estudiantes').where('entregado','>','').get();
+      const entregados=new Set();snap.forEach(d=>{if(d.data().entregado===CONFIG.ciclo)entregados.add(d.id);});
+      const all=await db.collection('estudiantes').get();
+      rows=[['Matrícula','Emplid','Nombre','Campus','Color','Raya']];
+      all.forEach(d=>{if(!entregados.has(d.id)){const s=d.data();rows.push([s.matricula,s.emplid,s.nombre,s.campus,s.color,s.raya]);}});
+      filename=`faltantes_entrega_est_${CONFIG.ciclo}.xlsx`;
+    } else if(tipo==='faltantes-dev-est'){
+      const snap=await db.collection('estudiantes').get();
+      rows=[['Matrícula','Emplid','Nombre','Campus','Color','Raya']];
+      snap.forEach(d=>{const s=d.data();if(s.entregado===CONFIG.ciclo&&s.devuelto!==CONFIG.ciclo)rows.push([s.matricula,s.emplid,s.nombre,s.campus,s.color,s.raya]);});
+      filename=`faltantes_dev_est_${CONFIG.ciclo}.xlsx`;
+    } else if(tipo==='faltantes-entrega-mae'){
+      const snap=await db.collection('maestros').get();
+      rows=[['Cédula','Nombre','Campus','Color','Raya']];
+      snap.forEach(d=>{const s=d.data();if(s.entregado!==CONFIG.ciclo)rows.push([s.cedula,s.nombre,s.campus,s.color,s.raya]);});
+      filename=`faltantes_entrega_mae_${CONFIG.ciclo}.xlsx`;
+    } else if(tipo==='faltantes-dev-mae'){
+      const snap=await db.collection('maestros').get();
+      rows=[['Cédula','Nombre','Campus','Color','Raya']];
+      snap.forEach(d=>{const s=d.data();if(s.entregado===CONFIG.ciclo&&s.devuelto!==CONFIG.ciclo)rows.push([s.cedula,s.nombre,s.campus,s.color,s.raya]);});
+      filename=`faltantes_dev_mae_${CONFIG.ciclo}.xlsx`;
+    } else if(tipo==='historico'){
+      const snap=await db.collection('registros').get();
+      rows=[['Ciclo','Nombre','Tipo','Acción','Campus','Color','Raya','Mora','Piezas','Total','Operador','Fecha']];
+      snap.forEach(d=>{const r=d.data();rows.push([r.ciclo,r.nombre,r.tipo,r.accion,r.campus||'',r.color||'',r.raya||'',r.mora||0,r.cobroPiezas||0,r.totalCobro||0,r.operador||'',r.timestamp]);});
+      filename=`historico_ciclos.xlsx`;
+    }
+    if(rows.length>1){
+      const wb=XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Reporte');
+      XLSX.writeFile(wb,filename);
+    } else alert('No hay datos para exportar');
+    hideLoading();
+  }catch(e){hideLoading();alert('Error: '+e.message);}
+}
+
+// ══════════════════════════════════════════════
+//  HISTÓRICO
+// ══════════════════════════════════════════════
+async function cargarHistorico(){
+  try{
+    const snap=await db.collection('registros').get();
+    const ciclos={};
+    snap.forEach(d=>{
+      const r=d.data();
+      if(!ciclos[r.ciclo]) ciclos[r.ciclo]={total:0,ent:0,dev:0,mora:0};
+      if(r.accion==='entrega') ciclos[r.ciclo].ent++;
+      if(r.accion==='devolucion'){ciclos[r.ciclo].dev++;ciclos[r.ciclo].total++;}
+      if(r.totalCobro>0) ciclos[r.ciclo].mora++;
+    });
+    const sorted=Object.entries(ciclos).sort((a,b)=>b[0].localeCompare(a[0]));
+    const maxEnt=Math.max(...sorted.map(([,v])=>v.ent),1);
+    document.getElementById('hist-bars').innerHTML=sorted.map(([c,v])=>`
+      <div class="hist-row-wrap">
+        <div class="hist-ciclo">${c}</div>
+        <div class="hist-bar-wrap"><div class="hist-bar" style="width:${v.ent/maxEnt*100}%">${v.ent}</div></div>
+        <div class="hist-num">${v.ent}</div>
+      </div>`).join('');
+    const best=sorted.sort((a,b)=>b[1].ent-a[1].ent)[0];
+    document.getElementById('best-ciclo').textContent=best?`Ciclo ${best[0]} — ${best[1].ent} entregas`:'—';
+    document.getElementById('hist-table').innerHTML=sorted.map(([c,v])=>`
+      <tr><td>${c}</td><td>${v.ent+v.dev}</td><td>${v.ent}</td><td>${v.dev}</td><td>${Math.max(0,v.ent-v.dev)}</td><td>${v.mora}</td></tr>`).join('');
+  }catch(e){console.log(e);}
+}
+
+// ══════════════════════════════════════════════
+//  AGREGAR MANUAL
+// ══════════════════════════════════════════════
+async function guardarManual(){
+  showLoading("GUARDANDO...");
+  try{
+    if(addTab==='est'){
+      const mat=document.getElementById('f-mat').value.trim();
+      const emp=document.getElementById('f-emp').value.trim();
+      if(!mat&&!emp){hideLoading();alert('Ingresa matrícula o emplid');return;}
+      const doc={
+        matricula:mat, emplid:emp,
+        nombre:document.getElementById('f-nom').value.trim(),
+        campus:document.getElementById('f-cam').value,
+        facultad:document.getElementById('f-fac').value,
+        programa:document.getElementById('f-prog').value.trim(),
+        color:document.getElementById('f-col').value,
+        raya:document.getElementById('f-ray').value,
+        celular:document.getElementById('f-cel').value.trim(),
+        correo:document.getElementById('f-mail').value.trim(),
+        entregado:false, devuelto:false
+      };
+      await db.collection('estudiantes').doc(mat||emp).set(doc,{merge:true});
+    } else {
+      const ced=document.getElementById('m-ced').value.trim();
+      const nom=document.getElementById('m-nom').value.trim();
+      if(!ced){hideLoading();alert('Ingresa la cédula');return;}
+      const doc={
+        cedula:ced, nombre:nom,
+        campus:document.getElementById('m-cam').value,
+        color:document.getElementById('m-col').value,
+        raya:document.getElementById('m-ray').value,
+        telefono:document.getElementById('m-tel').value.trim(),
+        correo:document.getElementById('m-mail').value.trim(),
+        entregado:false, devuelto:false
+      };
+      await db.collection('maestros').doc(ced).set(doc,{merge:true});
+    }
+    hideLoading();
+    closeModal('add');
+    alert('Guardado ✓');
+  }catch(e){hideLoading();alert('Error: '+e.message);}
+}
+
+// ══════════════════════════════════════════════
+//  QR SCANNER
+// ══════════════════════════════════════════════
+let qrStream=null;
+let qrHtml5=null;
+async function abrirQR(){
+  document.getElementById('qr-overlay').classList.add('visible');
+  try{
+    qrStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    document.getElementById('qr-video').srcObject=qrStream;
+    if(typeof Html5Qrcode !== 'undefined'){
+      const videoEl=document.getElementById('qr-video');
+      const canvas=document.createElement('canvas');
+      const scan=()=>{
+        if(!qrStream) return;
+        canvas.width=videoEl.videoWidth; canvas.height=videoEl.videoHeight;
+        const c2=canvas.getContext('2d');
+        c2.drawImage(videoEl,0,0);
+        requestAnimationFrame(scan);
+      };
+      requestAnimationFrame(scan);
+    }
+  }catch(e){document.getElementById('qr-status').textContent='Error de cámara: '+e.message;}
+}
+function cerrarQR(){
+  if(qrStream) qrStream.getTracks().forEach(t=>t.stop());
+  qrStream=null;
+  document.getElementById('qr-overlay').classList.remove('visible');
+  document.getElementById('qr-status').textContent='Apunta la cámara al código QR';
+  document.getElementById('qr-video').srcObject=null;
+}
+
+// ══════════════════════════════════════════════
+//  GOOGLE SHEETS SYNC
+// ══════════════════════════════════════════════
+async function sincronizarGoogleSheets(){
+  alert('Función de sincronización con Google Sheets. Configura el webhook en los ajustes avanzados.');
+}
+</script>
+</body>
+</html>
