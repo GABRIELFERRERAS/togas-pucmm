@@ -1103,6 +1103,61 @@ function calcCobro(){
   else cb.classList.remove('visible');
   return{cobro,faltantes};
 }
+const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbz1HBDUhq5W6YLIjhdmJYGQ4R9VmqDTr6w5tji1zFd0-Lmj7Off5vheMR9QwHfjVUsWqw/exec';
+const SHEETS_SECRET = '252525'; // igual al de Apps Script
+
+async function obtenerDatosCampus(campus){
+  const headers=['Matrícula','Emplid','Nombre','Color','Raya','Programa','Entregado','Devuelto','Mora','Cobro Piezas','Total Cobro','Faltantes','Operador','Fecha'];
+  const filas=[];
+  const snap=await db.collection('estudiantes').where('campusEmail','==',campus).get();
+  const procesados=new Set();
+  for(const doc of snap.docs){
+    const s=doc.data();
+    const key=s.emplid||s.mat;
+    if(procesados.has(key))continue;
+    procesados.add(key);
+    const r=(await db.collection('registros').doc(doc.id+'_'+CONFIG.ciclo).get()).data()||{};
+    const ua=r.ultimaAccion||{};
+    filas.push([
+      s.mat||'',s.emplid||'',s.nombre||'',s.color||'',rayaLabel(s.raya),
+      s.programa||'',r.entregado?'SÍ':'NO',r.devuelto?'SÍ':'NO',
+      ua.mora||0,ua.cobroPiezas||0,ua.totalCobro||0,
+      (ua.faltantes||[]).join(', '),ua.operador||'—',
+      ua.timestamp?new Date(ua.timestamp).toLocaleString('es-DO'):'—'
+    ]);
+  }
+  return {headers,filas};
+}
+
+function obtenerDatosInventario(){
+  const headers=['Color','Técnico (0)','Grado (I)','Maestría (II)','Doc.Estudiante (3E)','Doc.Maestro (3M)'];
+  const filas=Object.keys(INVENTARIO).map(color=>{
+    const inv=INVENTARIO[color];
+    return [color, inv.col0||0, inv.col1||0, inv.col2||0, inv.col3E||0, inv.col3M||0];
+  });
+  return {headers,filas};
+}
+
+async function enviarASheet(tipo,{headers,filas}){
+  await fetch(SHEETS_WEBHOOK_URL,{
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({secret:SHEETS_SECRET,tipo,headers,filas})
+  });
+}
+
+async function sincronizarGoogleSheets(silencioso){
+  if(!silencioso) showLoading('SINCRONIZANDO CON GOOGLE SHEETS...');
+  try{
+    await enviarASheet('CSTI', await obtenerDatosCampus('CSTI'));
+    await enviarASheet('CVIR', await obtenerDatosCampus('CVIR'));
+    await enviarASheet('Inventario', obtenerDatosInventario());
+    if(!silencioso){hideLoading(); alert('✅ Google Sheet actualizada correctamente.');}
+  }catch(e){
+    if(!silencioso){hideLoading(); alert('Error sincronizando: '+e.message);}
+    console.error('Error sync sheets:',e);
+  }
+}
 
 // ══════════════════════════════════════════════
 //  FIRMA
